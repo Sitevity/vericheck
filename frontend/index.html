@@ -569,8 +569,211 @@
             gap: 2rem;
         }
 
+        /* ── RESPONSIVE MOBILE ─────────────────────────────── */
         @media (max-width: 768px) {
-            .score-card { grid-template-columns: 1fr; }
+            * { box-sizing: border-box; }
+
+            /* ── NAVBAR ── */
+            .navbar {
+                position: fixed;
+                top: 0; left: 0; right: 0;
+                z-index: 9999;
+                background: var(--nav-bg);
+                backdrop-filter: blur(20px);
+                border-bottom: 1px solid var(--card-border);
+                height: auto;
+                min-height: 60px;
+            }
+            .nav-container {
+                padding: 0 1rem;
+                height: 60px;
+                flex-wrap: wrap;
+                gap: 0;
+            }
+            .logo { font-size: 1.2rem !important; padding: 0.5rem 0; }
+            .logo-icon { width: 32px !important; height: 32px !important; font-size: 0.9rem; }
+
+            /* Hamburger button */
+            .mobile-menu-btn {
+                display: flex !important;
+                flex-direction: column;
+                gap: 5px;
+                cursor: pointer;
+                background: none;
+                border: none;
+                padding: 8px;
+                border-radius: 8px;
+                transition: background 0.2s;
+                margin-left: auto;
+            }
+            .mobile-menu-btn:hover { background: rgba(255,255,255,0.1); }
+            .mobile-menu-btn span {
+                display: block;
+                width: 22px;
+                height: 2px;
+                background: var(--nav-text);
+                border-radius: 2px;
+                transition: all 0.3s;
+            }
+            .mobile-menu-btn.active span:nth-child(1) { transform: rotate(45deg) translate(4px, 5px); }
+            .mobile-menu-btn.active span:nth-child(2) { opacity: 0; }
+            .mobile-menu-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(4px, -5px); }
+
+            /* Mobile menu overlay */
+            .nav-menu {
+                display: none !important;
+                position: fixed;
+                top: 60px;
+                left: 0; right: 0;
+                background: var(--nav-bg);
+                border-bottom: 1px solid var(--card-border);
+                flex-direction: column !important;
+                padding: 0.5rem 0;
+                z-index: 9999;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            }
+            .nav-menu.open { display: flex !important; }
+            .nav-menu .nav-item {
+                padding: 0.9rem 1.5rem !important;
+                border-bottom: 1px solid var(--card-border);
+                font-size: 1rem;
+                text-align: left;
+                width: 100%;
+                cursor: pointer;
+            }
+            .nav-menu .nav-item:hover { background: rgba(99,102,241,0.1); }
+            .nav-actions { display: none !important; }
+
+            /* ── HERO SECTION ── */
+            .page-section { padding: 70px 0 0 0; }
+            .hero {
+                padding: 1.5rem 1rem 2rem !important;
+                min-height: 100vh !important;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .hero h1 {
+                font-size: clamp(1.8rem, 10vw, 3rem) !important;
+                line-height: 1.15 !important;
+                margin-bottom: 1rem !important;
+            }
+            .hero p {
+                font-size: 0.95rem !important;
+                max-width: 100% !important;
+                margin-bottom: 1.5rem !important;
+                line-height: 1.6;
+            }
+            .badge {
+                font-size: 0.75rem !important;
+                padding: 0.4rem 0.8rem !important;
+                margin-bottom: 1rem !important;
+            }
+            .hero-cta {
+                flex-direction: column !important;
+                gap: 0.75rem !important;
+                width: 100%;
+            }
+            .hero-cta .btn { width: 100%; justify-content: center; padding: 0.9rem 1.5rem; font-size: 1rem !important; }
+            .bubbles, .bubble-wrap { display: none !important; }
+
+            /* Hero stats */
+            .hero-stats {
+                flex-wrap: wrap !important;
+                gap: 1rem !important;
+                margin-top: 1.5rem !important;
+                justify-content: center;
+            }
+            .hero-stat { flex: 1 1 calc(33% - 1rem); min-width: 80px; }
+            .hero-stat-num { font-size: 1.3rem !important; }
+            .hero-stat-label { font-size: 0.7rem !important; }
+            .hero-stat-div { display: none !important; }
+
+            /* ── CHECKER SECTION ON HOME ── */
+            .checker-section { padding: 1.5rem 1rem !important; }
+            .checker-section .card { padding: 1rem !important; }
+            .input-area { padding: 0.5rem !important; }
+            .main-text {
+                min-height: 180px !important;
+                font-size: 14px !important;
+                padding: 1rem !important;
+            }
+            .btn-primary { width: 100% !important; padding: 1rem !important; font-size: 1rem !important; }
+            .word-info { font-size: 0.8rem !important; }
+            .upload-row { flex-direction: column !important; gap: 0.5rem; }
+            .upload-btn, .clear-btn { width: 100% !important; font-size: 0.85rem !important; padding: 0.7rem !important; }
+
+            /* ── FEATURES GRID ── */
+            .features-grid { grid-template-columns: 1fr !important; padding: 0 1rem !important; gap: 1rem !important; }
+            .feature-card { padding: 1.2rem !important; }
+            .feature-card h3 { font-size: 1rem !important; }
+            .feature-card p { font-size: 0.85rem !important; }
+
+            /* ── SECTION HEADINGS ── */
+            .section { padding: 3rem 1rem !important; }
+            .section h2 { font-size: 1.5rem !important; }
+            .section h3 { font-size: 1.2rem !important; }
+
+            /* ── METRICS GRID ── */
+            .metrics-grid { grid-template-columns: 1fr 1fr !important; gap: 0.75rem !important; }
+            .metric-card { padding: 1rem 0.75rem !important; }
+            .metric-card .metric-val { font-size: 1.5rem !important; }
+            .metric-card .metric-label { font-size: 0.75rem !important; }
+
+            /* ── SCORE CARD / RESULTS ── */
+            .score-card { grid-template-columns: 1fr !important; gap: 1rem !important; padding: 1rem !important; }
+            .result-meta { grid-template-columns: 1fr 1fr !important; gap: 0.5rem; }
+            .meta-item { padding: 0.75rem !important; font-size: 0.8rem; }
+            .method-grid { grid-template-columns: 1fr !important; }
+
+            /* ── FOOTER ── */
+            .footer { padding: 2rem 1rem !important; }
+            .footer-grid { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
+            .footer-brand p { font-size: 0.85rem !important; }
+            .footer-col ul li { font-size: 0.85rem !important; padding: 0.3rem 0; }
+            .footer-bottom { flex-direction: column !important; gap: 0.5rem; font-size: 0.8rem; }
+
+            /* ── MODALS ── */
+            .modal-content { padding: 1.5rem 1rem !important; max-width: 95vw !important; margin: 1rem auto !important; }
+            .modal-content h2 { font-size: 1.2rem !important; }
+            .form-group input, .form-group textarea { padding: 0.8rem !important; font-size: 14px !important; }
+            .modal-actions { flex-direction: column !important; gap: 0.5rem; }
+
+            /* ── EXPORT DROPDOWN ── */
+            .export-dropdown { right: 0; left: auto; min-width: 160px; }
+
+            /* ── TABLES ── */
+            .admin-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .admin-table-wrap table { font-size: 0.8rem !important; min-width: 600px; }
+
+            /* ── ACCURACY PAGE ── */
+            .ensemble-cards { grid-template-columns: 1fr !important; }
+            .training-grid { grid-template-columns: 1fr !important; }
+            .confusion-matrix { overflow-x: auto; }
+
+            /* ── REPORT ACTIONS ── */
+            .report-actions { flex-wrap: wrap; gap: 0.5rem; }
+            .report-actions .btn { width: 48%; font-size: 0.85rem; }
+
+            /* ── ABOUT / REFERENCES ── */
+            .about-grid { grid-template-columns: 1fr !important; }
+            .tech-stack-grid { grid-template-columns: 1fr 1fr !important; gap: 0.75rem !important; }
+
+            /* ── TOAST ── */
+            .toast { left: 1rem !important; right: 1rem !important; bottom: 1rem !important; }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 1.6rem !important; }
+            .hero-stat { flex: 1 1 45% !important; }
+            .metrics-grid { grid-template-columns: 1fr !important; }
+            .tech-stack-grid { grid-template-columns: 1fr !important; }
+            .result-meta { grid-template-columns: 1fr !important; }
+            .report-actions .btn { width: 100% !important; }
+        }
+
+        /* Default: hide mobile button on desktop */
+        .mobile-menu-btn { display: none; }
         }
 
         .score-circle-wrap {
@@ -2291,19 +2494,23 @@
     <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
-            <a href="#" class="logo" onclick="showPage('home')">
+            <a href="/" class="logo" onclick="event.preventDefault(); showPage('home')">
                 <div class="logo-icon"><i class="fas fa-shield-halved"></i></div>
                 VeriCheck
             </a>
 
+            <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()">
+                <span></span><span></span><span></span>
+            </button>
+
             <div class="nav-menu" id="navMenu">
-                <a class="nav-item active" onclick="showPage('home')">Home</a>
-                <a class="nav-item" onclick="showPage('checker')">Checker</a>
-                <a class="nav-item" onclick="showPage('features')">Features</a>
-                <a class="nav-item" onclick="showPage('accuracy')">Accuracy</a>
-                <a class="nav-item" onclick="showPage('architecture')">Architecture</a>
-                <a class="nav-item" onclick="showPage('about')">About Us</a>
-                <a class="nav-item" onclick="showPage('references')">References</a>
+                <a class="nav-item active" href="/" onclick="event.preventDefault(); showPage('home')">Home</a>
+                <a class="nav-item" href="/check" onclick="event.preventDefault(); showPage('checker')">Checker</a>
+                <a class="nav-item" href="/features" onclick="event.preventDefault(); showPage('features')">Features</a>
+                <a class="nav-item" href="/accuracy" onclick="event.preventDefault(); showPage('accuracy')">Accuracy</a>
+                <a class="nav-item" href="/architecture" onclick="event.preventDefault(); showPage('architecture')">Architecture</a>
+                <a class="nav-item" href="/about" onclick="event.preventDefault(); showPage('about')">About Us</a>
+                <a class="nav-item" href="/references" onclick="event.preventDefault(); showPage('references')">References</a>
             </div>
 
             <div class="nav-actions" id="navActions">
@@ -2333,7 +2540,7 @@
                 <h1>Detect Plagiarism<br><span class="gradient-text">With AI Precision</span></h1>
                 <p>Advanced Siamese LSTM neural network analyzes your text at semantic level. Free checks up to 200 words. No credit card required.</p>
                 <div class="hero-cta">
-                    <a class="btn btn-primary" onclick="showPage('checker')" style="padding: 1rem 2.5rem; font-size: 1.1rem;">
+                    <a class="btn btn-primary" href="/check" onclick="event.preventDefault(); showPage('checker')" style="padding: 1rem 2.5rem; font-size: 1.1rem;">
                         <i class="fas fa-search"></i> Start Free Check
                     </a>
                     <a class="btn btn-outline" onclick="showModal('register')" style="padding: 1rem 2.5rem; font-size: 1.1rem;">
@@ -3565,7 +3772,7 @@
     <footer class="footer">
         <div class="footer-grid">
             <div class="footer-brand">
-                <a href="#" class="logo" onclick="showPage('home')" style="margin-bottom: 1rem; display: inline-flex;">
+                <a href="/" class="logo" onclick="event.preventDefault(); showPage('home')" style="margin-bottom: 1rem; display: inline-flex;">
                     <div class="logo-icon"><i class="fas fa-shield-halved"></i></div>
                     VeriCheck
                 </a>
@@ -3574,18 +3781,18 @@
             <div class="footer-col">
                 <h4>Navigation</h4>
                 <ul>
-                    <li><a href="#" onclick="showPage('home')">Home</a></li>
-                    <li><a href="#" onclick="showPage('checker')">Checker</a></li>
-                    <li><a href="#" onclick="showPage('features')">Features</a></li>
-                    <li><a href="#" onclick="showPage('accuracy')">Accuracy</a></li>
-                    <li><a href="#" onclick="showPage('architecture')">Architecture</a></li>
+                    <li><a href="/" onclick="event.preventDefault(); showPage('home')">Home</a></li>
+                    <li><a href="/check" onclick="event.preventDefault(); showPage('checker')">Checker</a></li>
+                    <li><a href="/features" onclick="event.preventDefault(); showPage('features')">Features</a></li>
+                    <li><a href="/accuracy" onclick="event.preventDefault(); showPage('accuracy')">Accuracy</a></li>
+                    <li><a href="/architecture" onclick="event.preventDefault(); showPage('architecture')">Architecture</a></li>
                 </ul>
             </div>
             <div class="footer-col">
                 <h4>Project</h4>
                 <ul>
-                    <li><a href="#" onclick="showPage('about')">About Us</a></li>
-                    <li><a href="#" onclick="showPage('references')">References</a></li>
+                    <li><a href="/about" onclick="event.preventDefault(); showPage('about')">About Us</a></li>
+                    <li><a href="/references" onclick="event.preventDefault(); showPage('references')">References</a></li>
                     <li><a href="#" onclick="showModal('register')">Sign Up</a></li>
                     <li><a href="#" onclick="showModal('login')">Login</a></li>
                 </ul>
@@ -3607,7 +3814,7 @@
     </footer>
 
     <script>
-        const API_URL = "/api";
+        const API_URL = (window.VERICheck_API_URL) ? window.VERICheck_API_URL : "/api";
 
         let state = {
             token: localStorage.getItem("vericheck_token"),
@@ -3629,11 +3836,27 @@
             applyTheme(current === 'dark' ? 'light' : 'dark');
         }
 
+        function toggleMobileMenu() {
+            const menu = document.getElementById('navMenu');
+            const btn = document.getElementById('mobileMenuBtn');
+            menu.classList.toggle('open');
+            btn.classList.toggle('active');
+        }
+
+        // Close mobile menu when clicking nav item
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('nav-item')) {
+                document.getElementById('navMenu').classList.remove('open');
+                document.getElementById('mobileMenuBtn').classList.remove('active');
+            }
+        });
+
         document.addEventListener("DOMContentLoaded", () => {
             const savedTheme = localStorage.getItem('vericheck_theme') || 'dark';
             applyTheme(savedTheme);
             updateNav();
             initBubbles();
+            initRouter();
         });
 
         // Bubble alphabets animation
@@ -3676,7 +3899,15 @@
             });
         }
 
-        function showPage(page) {
+        function initRouter() {
+            const path = window.location.pathname.replace(/^\//, '').split('?')[0];
+            if (path && path !== '') {
+                const page = path.split('/')[0];
+                showPage(page, false);
+            }
+        }
+
+        function showPage(page, pushState = true) {
             // Hide all pages
             document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
 
@@ -3698,10 +3929,23 @@
                 });
             }
 
+            // Update URL without reloading (supports back/forward)
+            if (pushState && page !== 'home') {
+                history.pushState({ page }, '', '/' + page);
+            } else if (pushState) {
+                history.pushState({ page: 'home' }, '', '/');
+            }
+
             // Load dashboard if needed
             if (page === 'dashboard') loadDashboard();
             if (page === 'admin') loadAdminDashboard();
         }
+
+        // Handle browser back/forward
+        window.addEventListener('popstate', (e) => {
+            const page = e.state?.page || 'home';
+            showPage(page, false);
+        });
 
         function showModal(type) {
             document.getElementById(type + 'Modal').classList.add('show');
@@ -3846,11 +4090,6 @@
                 }
                 data = await res.json();
                 if (res.ok) displayResult(data);
-                else {
-                    const errMsg = data.error || ('Word limit exceeded. Sign up for unlimited!');
-                    showToast(errMsg, 'error');
-                    if (res.status === 403) showModal('register');
-                }
             } catch (e) {
                 showToast('Server error (' + e.message + '). Please try again.', 'error');
             }
@@ -3908,11 +4147,10 @@
                         return;
                     }
                 }
+                data = await res.json();
                 if (res.ok) displayCheckerResult(data);
                 else {
-                    const errMsg = data.error || ('Check failed. Please try again.');
-                    showToast(errMsg, 'error');
-                    if (res.status === 403) showModal('register');
+                    showToast(data.error || 'Check failed. Please try again.', 'error');
                     if (res.status === 401) showToast('Session expired. Please login again.', 'error');
                 }
             } catch (e) {

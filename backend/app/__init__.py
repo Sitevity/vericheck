@@ -32,9 +32,15 @@ def create_app() -> Flask:
     def index():
         return send_from_directory(FRONTEND_PATH, 'index.html')
 
+    # Serve actual files (CSS, JS, images with extensions)
     @app.route("/<path:filename>")
     def serve_static(filename):
-        return send_from_directory(FRONTEND_PATH, filename)
+        import os
+        # Only serve files with extensions (real assets), skip for paths like "check", "signup"
+        if '.' in filename and os.path.isfile(os.path.join(FRONTEND_PATH, filename)):
+            return send_from_directory(FRONTEND_PATH, filename)
+        # No extension or file not found — fall through to SPA handler
+        return send_from_directory(FRONTEND_PATH, "index.html")
 
     # API info endpoint
     @app.route("/api")
