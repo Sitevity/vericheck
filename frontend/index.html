@@ -1,0 +1,4418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeriCheck - AI Plagiarism Detector | IIT Patna</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #050507;
+            --bg-card: rgba(15, 15, 20, 0.9);
+            --bg-card-light: rgba(20, 20, 28, 0.95);
+            --border: rgba(255, 255, 255, 0.06);
+            --border-light: rgba(255, 255, 255, 0.1);
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #a855f7;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --text: #f3f4f6;
+            --text-muted: #9ca3af;
+            --text-light: #e5e7eb;
+            --glow: rgba(99, 102, 241, 0.4);
+
+            /* Light mode defaults (dark values — overridden below) */
+            --bg: var(--bg-dark);
+            --bg-secondary: var(--bg-card);
+            --text-primary: var(--text);
+            --nav-bg: rgba(5, 5, 7, 0.95);
+            --nav-text: #f3f4f6;
+            --card-border: var(--border);
+            --input-bg: rgba(255, 255, 255, 0.02);
+            --input-border: var(--border);
+            --table-stripe: rgba(255, 255, 255, 0.02);
+            --table-hover: rgba(255, 255, 255, 0.05);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        [data-theme="light"] {
+            --bg: #f8f9fc;
+            --bg-secondary: #ffffff;
+            --text-primary: #1a1a2e;
+            --nav-bg: rgba(248, 249, 252, 0.95);
+            --nav-text: #1a1a2e;
+            --card-border: rgba(0, 0, 0, 0.08);
+            --input-bg: rgba(0, 0, 0, 0.03);
+            --input-border: rgba(0, 0, 0, 0.12);
+            --table-stripe: rgba(0, 0, 0, 0.02);
+            --table-hover: rgba(99, 102, 241, 0.06);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            --border: rgba(0, 0, 0, 0.08);
+            --border-light: rgba(0, 0, 0, 0.12);
+            --text-muted: #6b7280;
+            --text: #1a1a2e;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Background */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: -2;
+        }
+
+        [data-theme="light"] .bg-grid {
+            background-image:
+                linear-gradient(rgba(99, 102, 241, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.06) 1px, transparent 1px);
+        }
+
+        .bg-glow {
+            position: fixed;
+            top: -30%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1000px;
+            height: 1000px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: -1;
+            animation: pulse-glow 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+            50% { opacity: 0.8; transform: translateX(-50%) scale(1.1); }
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 0;
+            background: var(--nav-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--card-border);
+            color: var(--nav-text);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            text-decoration: none;
+            color: var(--nav-text);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .nav-item {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            color: var(--nav-text);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="light"] .hero h1 { color: var(--text-primary); }
+
+        [data-theme="light"] .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        [data-theme="light"] .badge {
+            background: rgba(99, 102, 241, 0.08);
+            border-color: rgba(99, 102, 241, 0.2);
+            color: #6366f1;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--primary);
+        }
+
+        .btn {
+            padding: 0.6rem 1.25rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 15px var(--glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px var(--glow);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            color: white;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .btn-sm { padding: 0.4rem 1rem; font-size: 0.85rem; }
+
+        /* Main */
+        .main {
+            padding-top: 70px;
+        }
+
+        /* Page Sections */
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
+        /* Hero */
+        .hero {
+            min-height: calc(100vh - 70px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 4rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            color: #a5b4fc;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            animation: fadeIn 0.8s ease-out 0.2s both;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 650px;
+            margin-bottom: 3rem;
+            line-height: 1.7;
+            animation: fadeIn 0.8s ease-out 0.4s both;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            animation: fadeIn 0.8s ease-out 0.6s both;
+        }
+
+        /* Hero stats */
+        .hero-stats {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-top: 2.5rem;
+            animation: fadeIn 0.8s ease-out 0.8s both;
+        }
+
+        .hero-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hero-stat-num {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: white;
+        }
+
+        .hero-stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-top: 0.2rem;
+        }
+
+        .hero-stat-div {
+            width: 1px;
+            height: 40px;
+            background: var(--border-light);
+        }
+
+        [data-theme="light"] .hero-stat-num { color: var(--text-primary); }
+
+        /* Bubble alphabets */
+        .bubbles {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .bubble {
+            position: absolute;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            color: rgba(99, 102, 241, 0.15);
+            user-select: none;
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        color 0.3s ease,
+                        text-shadow 0.3s ease;
+            cursor: default;
+            animation: float-bubble var(--dur, 8s) ease-in-out infinite;
+        }
+
+        @keyframes float-bubble {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-20px) rotate(5deg); }
+            66% { transform: translateY(10px) rotate(-3deg); }
+        }
+
+        .bubble.active {
+            color: rgba(168, 85, 247, 0.6);
+            text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+            animation-play-state: paused;
+        }
+
+        /* Checker Section */
+        .checker-section {
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            backdrop-filter: blur(20px);
+        }
+
+        .input-area {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-area label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .input-area textarea {
+            width: 100%;
+            height: 220px;
+            padding: 1.25rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: none;
+            transition: all 0.3s;
+        }
+
+        .input-area textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .input-area textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .word-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .word-info .error { color: var(--error); }
+        .word-info .warning { color: var(--warning); }
+
+        .file-zone {
+            border: 2px dashed var(--border-light);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 1.5rem;
+        }
+
+        .file-zone:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        [data-theme="light"] .card {
+            background: var(--bg-secondary);
+            border-color: var(--card-border);
+            box-shadow: var(--shadow);
+        }
+
+        [data-theme="light"] .input-area textarea {
+            background: var(--input-bg);
+            border-color: var(--input-border);
+            color: var(--text-primary);
+        }
+
+        [data-theme="light"] .btn-outline {
+            border-color: var(--card-border);
+            color: var(--text-primary);
+        }
+
+        [data-theme="light"] .file-zone {
+            border-color: var(--card-border);
+        }
+
+        [data-theme="light"] .table-container {
+            background: var(--bg-secondary);
+            border-color: var(--card-border);
+        }
+
+        [data-theme="light"] table {
+            color: var(--text-primary);
+        }
+
+        [data-theme="light"] table tr:nth-child(even) {
+            background: var(--table-stripe);
+        }
+
+        [data-theme="light"] table tr:hover {
+            background: var(--table-hover);
+        }
+
+        [data-theme="light"] .modal-content {
+            background: var(--bg-secondary);
+            border-color: var(--card-border);
+            color: var(--text-primary);
+        }
+
+        [data-theme="light"] .form-group input,
+        [data-theme="light"] .form-group select {
+            background: var(--input-bg);
+            border-color: var(--input-border);
+            color: var(--text-primary);
+        }
+
+        [data-theme="light"] .toast-container {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        .file-zone i { font-size: 2rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .file-zone p { color: var(--text-muted); margin: 0.5rem 0; }
+        .file-zone .formats { font-size: 0.8rem; color: var(--text-muted); opacity: 0.6; }
+
+        .checker-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        /* Result */
+        .result-box {
+            display: none;
+            margin-top: 2rem;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .result-box.show { display: block; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .score-card {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .score-card { grid-template-columns: 1fr; }
+        }
+
+        .score-circle-wrap {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+            border-radius: 20px;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(var(--score-color, var(--success)) calc(var(--score) * 1%), rgba(255,255,255,0.1) 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            position: relative;
+        }
+
+        .score-circle::after {
+            content: '';
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: var(--bg-dark);
+            border-radius: 50%;
+        }
+
+        .score-value {
+            position: relative;
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            z-index: 1;
+        }
+
+        .score-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .score-status {
+            display: inline-block;
+            padding: 0.5rem 1.25rem;
+            border-radius: 50px;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .score-status.high { background: rgba(239, 68, 68, 0.2); color: var(--error); }
+        .score-status.medium { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .score-status.low { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+
+        .result-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .meta-item {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .meta-item .value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .meta-item .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .analysis-box {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            padding: 1.25rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .analysis-box h4 {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        mark {
+            background: rgba(239, 68, 68, 0.3);
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 4rem;
+            justify-content: center;
+            padding: 3rem 2rem;
+            background: var(--bg-card);
+            border-radius: 20px;
+            margin: 3rem 2rem;
+            border: 1px solid var(--border);
+        }
+
+        @media (max-width: 768px) {
+            .stats-bar { flex-direction: column; gap: 2rem; }
+        }
+
+        .stat-item .value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-item .label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Section Headers */
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 0 2rem;
+        }
+
+        .section-header h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Features Grid */
+        .features-section {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-card h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* About Section */
+        .about-section {
+            padding: 5rem 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .about-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 3rem;
+        }
+
+        .about-content h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .about-content p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .team-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .team-card h4 {
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 0.25rem;
+        }
+
+        .team-card .roll {
+            font-size: 0.8rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .team-card ul {
+            list-style: none;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .team-card li {
+            margin-bottom: 0.5rem;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .team-card li::before {
+            content: '•';
+            color: var(--secondary);
+            position: absolute;
+            left: 0;
+        }
+
+        /* Architecture Section */
+        .arch-section {
+            padding: 5rem 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .arch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .arch-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+        }
+
+        .arch-card h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .arch-card h3 i {
+            color: var(--primary);
+        }
+
+        .arch-card pre {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            font-size: 0.8rem;
+            overflow-x: auto;
+            margin-top: 1rem;
+            color: var(--text-muted);
+        }
+
+        .arch-card ul {
+            list-style: none;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .arch-card li {
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .arch-card li::before {
+            content: '✓';
+            color: var(--success);
+            position: absolute;
+            left: 0;
+        }
+
+        /* Architecture Page Enhanced */
+        .arch-section {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .arch-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            margin: 2rem 0;
+        }
+
+        .arch-flow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+        }
+
+        .arch-flow-step-number {
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1rem;
+            z-index: 1;
+        }
+
+        .arch-flow-step-content {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .arch-flow-step-content h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .arch-flow-step-content p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.55;
+        }
+
+        .arch-flow-connector {
+            width: 2px;
+            height: 1.5rem;
+            background: linear-gradient(var(--primary), var(--secondary));
+            margin-left: 21px;
+            opacity: 0.4;
+            border-radius: 2px;
+        }
+
+        .arch-layers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .arch-layer-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .arch-layer-card h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .arch-layer-card h4 i { color: var(--primary); }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        .tech-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .tech-card .tech-icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .tech-card h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .tech-card p {
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+
+        .tech-card .tech-tag {
+            display: inline-block;
+            background: rgba(99,102,241,0.12);
+            color: #a5b4fc;
+            font-size: 0.72rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-top: 0.3rem;
+        }
+
+        /* System diagram */
+        .system-diagram {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .system-diagram h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .diagram-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .diagram-node {
+            background: rgba(99,102,241,0.1);
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 12px;
+            padding: 0.8rem 1.2rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            color: #a5b4fc;
+        }
+
+        .diagram-node.active {
+            background: rgba(99,102,241,0.2);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .diagram-node.backend {
+            background: rgba(168,85,247,0.1);
+            border-color: rgba(168,85,247,0.3);
+            color: #c084fc;
+        }
+
+        .diagram-node.ml {
+            background: rgba(16,185,129,0.1);
+            border-color: rgba(16,185,129,0.3);
+            color: #34d399;
+        }
+
+        .diagram-node.db {
+            background: rgba(245,158,11,0.1);
+            border-color: rgba(245,158,11,0.3);
+            color: #fbbf24;
+        }
+
+        .diagram-arrow {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            opacity: 0.5;
+        }
+
+        /* LSTM Diagram */
+        .lstm-diagram {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            font-family: 'Space Grotesk', monospace;
+            overflow-x: auto;
+        }
+
+        .lstm-diagram h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .lstm-diagram pre {
+            font-size: 0.78rem;
+            line-height: 1.7;
+            color: var(--text-muted);
+            white-space: pre;
+        }
+
+        .lstm-label {
+            color: #a5b4fc;
+            font-weight: 600;
+        }
+
+        .lstm-arrow { color: var(--primary); }
+        .lstm-fusion { color: #f59e0b; }
+        .lstm-out { color: #10b981; }
+
+        /* Accuracy Section */
+        .accuracy-section {
+            padding: 5rem 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .metric-card .value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-card .label {
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .metric-card .sub {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+            opacity: 0.8;
+        }
+
+        /* Ensemble Methods Grid */
+        .ensemble-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        .ensemble-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.4rem;
+        }
+
+        .ensemble-card h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ensemble-card h4 i { color: var(--primary); }
+
+        .ensemble-card .weight-badge {
+            margin-left: auto;
+            background: rgba(99,102,241,0.15);
+            color: #a5b4fc;
+            font-size: 0.72rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .ensemble-card p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.55;
+            margin-bottom: 0.8rem;
+        }
+
+        .progress-bar-wrap {
+            background: rgba(255,255,255,0.06);
+            border-radius: 8px;
+            height: 7px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 8px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .ensemble-score {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.4rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .ensemble-score span:last-child { color: var(--primary); font-weight: 600; }
+
+        /* Confusion Matrix */
+        .confusion-section {
+            margin-top: 2.5rem;
+        }
+
+        .confusion-section h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .confusion-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+            max-width: 340px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .conf-cell {
+            padding: 1.2rem;
+            border-radius: 14px;
+            text-align: center;
+        }
+
+        .conf-cell .conf-num {
+            font-size: 1.8rem;
+            font-weight: 800;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .conf-cell .conf-label {
+            font-size: 0.72rem;
+            opacity: 0.75;
+            margin-top: 0.2rem;
+        }
+
+        .conf-tp { background: rgba(16,185,129,0.15); color: #10b981; }
+        .conf-fp { background: rgba(239,68,68,0.15); color: #ef4444; }
+        .conf-fn { background: rgba(245,158,11,0.15); color: #f59e0b; }
+        .conf-tn { background: rgba(99,102,241,0.15); color: #818cf8; }
+
+        .conf-legend {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .conf-legend span { display: flex; align-items: center; gap: 0.35rem; }
+
+        .conf-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+        }
+
+        /* Comparison Table */
+        .comparison-table-wrap {
+            overflow-x: auto;
+            margin-top: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+
+        .comparison-table th {
+            background: rgba(99,102,241,0.08);
+            padding: 0.85rem 1.2rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-light);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .comparison-table td {
+            padding: 0.85rem 1.2rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .comparison-table tr:last-child td { border-bottom: none; }
+        .comparison-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+        .highlight-row td {
+            color: var(--primary) !important;
+            font-weight: 600;
+            background: rgba(99,102,241,0.05) !important;
+        }
+
+        .highlight-row td:first-child::before {
+            content: '▶ ';
+            font-size: 0.7rem;
+        }
+
+        .method-tag {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            margin: 0.15rem;
+        }
+
+        .tag-lstm { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+        .tag-tfidf { background: rgba(168,85,247,0.15); color: #c084fc; }
+        .tag-ngram { background: rgba(16,185,129,0.15); color: #34d399; }
+        .tag-char { background: rgba(245,158,11,0.15); color: #fbbf24; }
+        .tag-lcs { background: rgba(239,68,68,0.15); color: #fca5a5; }
+
+        /* Training Details Grid */
+        .training-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .training-details-grid { grid-template-columns: 1fr; }
+        }
+
+        .training-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.4rem;
+        }
+
+        .training-card h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .training-card h4 i { color: var(--primary); }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.87rem;
+        }
+
+        .detail-row:last-child { border-bottom: none; }
+        .detail-row .key { color: var(--text-muted); }
+        .detail-row .val { font-weight: 600; color: var(--text-light); }
+
+        /* Threshold slider */
+        .threshold-section {
+            margin-top: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .threshold-section h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .threshold-desc {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .threshold-bar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .threshold-track {
+            flex: 1;
+            height: 8px;
+            background: linear-gradient(to right,
+                #10b981 0%,
+                #10b981 45%,
+                #f59e0b 55%,
+                #ef4444 100%
+            );
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .threshold-marker {
+            position: absolute;
+            top: -6px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .threshold-val {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 0.9rem;
+            min-width: 40px;
+        }
+
+        /* ── RESULT BOX ─────────────────────────────────────────── */
+        .result-box {
+            margin-top: 2rem;
+            animation: fadeUp 0.5s ease-out;
+        }
+
+        .result-box .card { padding: 0; overflow: hidden; }
+
+        /* Report Header */
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 1.5rem;
+            background: rgba(99,102,241,0.06);
+            border-bottom: 1px solid var(--border);
+        }
+        .report-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .report-badge {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.7rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .report-date { font-size: 0.85rem; color: var(--text-muted); }
+
+        /* Score Section */
+        .score-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem 2rem 1rem;
+        }
+
+        /* SVG Gauge */
+        .gauge-wrap {
+            position: relative;
+            width: 200px;
+            margin-bottom: 0.5rem;
+        }
+        .gauge-svg { width: 100%; overflow: visible; }
+        .gauge-fill {
+            transition: stroke-dasharray 1.2s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.5s;
+        }
+        .gauge-center {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            pointer-events: none;
+        }
+        .gauge-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1;
+            color: var(--text);
+        }
+        .gauge-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Risk Meter */
+        .risk-meter {
+            width: 100%;
+            max-width: 480px;
+            margin: 0.75rem 0 0.5rem;
+        }
+        .risk-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+        }
+        .risk-bar {
+            height: 8px;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #10b981 0%, #10b981 20%, #f59e0b 40%, #ef4444 70%, #dc2626 100%);
+            position: relative;
+        }
+        .risk-pointer {
+            position: absolute;
+            top: -4px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 6px rgba(0,0,0,0.4);
+            transition: left 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            left: 0%;
+            transform: translateX(-50%);
+        }
+
+        /* Level Badge */
+        .level-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            margin: 0.5rem 0;
+        }
+        .level-badge.safe   { background: rgba(16,185,129,0.15); color: #10b981; }
+        .level-badge.low   { background: rgba(16,185,129,0.15); color: #10b981; }
+        .level-badge.medium{ background: rgba(245,158,11,0.15); color: #f59e0b; }
+        .level-badge.high  { background: rgba(239,68,68,0.15);  color: #ef4444; }
+        .level-badge.critical { background: rgba(220,38,38,0.15); color: #dc2626; }
+
+        /* Explanation */
+        .explanation-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 500px;
+            line-height: 1.6;
+            margin: 0.25rem 0 0.5rem;
+        }
+
+        /* Meta Stats Row */
+        .result-meta-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+        .meta-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            background: var(--bg-card);
+            font-size: 0.85rem;
+        }
+        .meta-stat i { font-size: 1.2rem; color: var(--primary); }
+        .meta-stat-value { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.1rem; }
+        .meta-stat-label { color: var(--text-muted); font-size: 0.75rem; }
+
+        /* Method Scores */
+        .method-scores {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .method-scores h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .method-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+        }
+        .method-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+        }
+        .method-name { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.3rem; }
+        .method-bar {
+            height: 6px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 3px;
+            margin-bottom: 0.25rem;
+            overflow: hidden;
+        }
+        .method-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: var(--primary);
+            transition: width 1s ease;
+        }
+        .method-value { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 0.9rem; }
+
+        /* Sentence Analysis */
+        .sentence-analysis {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .sentence-analysis h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .sent-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .sent-item {
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            border-left: 3px solid;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+        .sent-item.safe   { background: rgba(16,185,129,0.05);  border-color: #10b981; }
+        .sent-item.low    { background: rgba(16,185,129,0.08);  border-color: #10b981; }
+        .sent-item.medium { background: rgba(245,158,11,0.08);   border-color: #f59e0b; }
+        .sent-item.high   { background: rgba(239,68,68,0.08);   border-color: #ef4444; }
+        .sent-item.critical { background: rgba(220,38,38,0.12); border-color: #dc2626; }
+        .sent-score {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            padding: 0.15rem 0.5rem;
+            border-radius: 20px;
+            min-width: 50px;
+            text-align: center;
+        }
+        .sent-score.safe   { background: rgba(16,185,129,0.2); color: #10b981; }
+        .sent-score.low   { background: rgba(16,185,129,0.2); color: #10b981; }
+        .sent-score.medium{ background: rgba(245,158,11,0.2); color: #f59e0b; }
+        .sent-score.high  { background: rgba(239,68,68,0.2);  color: #ef4444; }
+        .sent-score.critical { background: rgba(220,38,38,0.2); color: #dc2626; }
+
+        /* Analysis Box */
+        .analysis-box {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .analysis-box h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .analysis-box p { line-height: 1.8; font-size: 0.9rem; }
+
+        /* Report Actions */
+        .report-actions {
+            display: flex;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .export-menu {
+            position: relative;
+            display: inline-block;
+        }
+
+        .export-dropdown {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 0.5rem;
+            min-width: 180px;
+            z-index: 100;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            display: none;
+        }
+
+        .export-dropdown.open { display: block; }
+
+        .export-dropdown button {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            width: 100%;
+            padding: 0.65rem 1rem;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 0.88rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .export-dropdown button:hover {
+            background: rgba(99,102,241,0.1);
+            color: var(--text);
+        }
+
+        .export-dropdown button i { width: 16px; text-align: center; color: var(--primary); }
+        .export-dropdown .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 0.3rem 0;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* References Section */
+        .refs-section {
+            padding: 5rem 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .refs-list {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+        }
+
+        .refs-list h3 {
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 1.5rem;
+        }
+
+        .ref-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .ref-item:last-child {
+            border-bottom: none;
+        }
+
+        .ref-item .title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .ref-item .desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Dashboard */
+        .dashboard-section {
+            padding: 3rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .dash-header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .admin-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        .admin-tab {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding: 0.6rem 1.2rem;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .admin-tab:hover { color: var(--text); background: var(--border); }
+        .admin-tab.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        .admin-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-header h3 { font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
+
+        .admin-panel table { width: 100%; border-collapse: collapse; }
+        .admin-panel th {
+            background: rgba(99, 102, 241, 0.08);
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        .admin-panel td {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+        .admin-panel tr:last-child td { border-bottom: none; }
+        .admin-panel tr:hover td { background: rgba(99, 102, 241, 0.04); }
+
+        .role-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .role-admin { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .role-user { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+
+        .action-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .action-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .action-btn.delete:hover { border-color: var(--error); color: var(--error); }
+
+        .hidden { display: none !important; }
+
+        .modal-overlay input[type="checkbox"] { width: auto; margin-right: 0.5rem; }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+        }
+
+        .stat-card .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card .label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .stat-card .value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .table-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            overflow-x: auto;
+        }
+
+        .table-card h3 {
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-high { background: rgba(239, 68, 68, 0.2); color: var(--error); }
+        .badge-medium { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .badge-low { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+
+        /* Footer */
+        .footer {
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            padding: 4rem 2rem 2rem;
+            margin-top: 4rem;
+        }
+
+        .footer-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr repeat(3, 1fr);
+            gap: 3rem;
+        }
+
+        @media (max-width: 968px) {
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .footer-brand .logo {
+            margin-bottom: 1rem;
+        }
+
+        .footer-brand p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        .footer-col h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            margin-bottom: 1.25rem;
+            color: white;
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-col a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .footer-col a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 3rem auto 0;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .footer-bottom a {
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+
+        .footer-bottom a:hover {
+            color: var(--primary);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-overlay.show { display: flex; }
+
+        .modal {
+            background: var(--bg-card-light);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            width: 90%;
+            max-width: 420px;
+            animation: modalIn 0.3s ease-out;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .modal-header h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .error-msg {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            display: none;
+            font-size: 0.9rem;
+        }
+
+        .error-msg.show { display: block; }
+
+        .modal-footer {
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .modal-footer a {
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            display: none;
+            z-index: 3000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .toast.show { display: block; }
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--error); }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading.show { display: block; }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo" onclick="showPage('home')">
+                <div class="logo-icon"><i class="fas fa-shield-halved"></i></div>
+                VeriCheck
+            </a>
+
+            <div class="nav-menu" id="navMenu">
+                <a class="nav-item active" onclick="showPage('home')">Home</a>
+                <a class="nav-item" onclick="showPage('checker')">Checker</a>
+                <a class="nav-item" onclick="showPage('features')">Features</a>
+                <a class="nav-item" onclick="showPage('accuracy')">Accuracy</a>
+                <a class="nav-item" onclick="showPage('architecture')">Architecture</a>
+                <a class="nav-item" onclick="showPage('about')">About Us</a>
+                <a class="nav-item" onclick="showPage('references')">References</a>
+            </div>
+
+            <div class="nav-actions" id="navActions">
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                <a class="nav-item" id="adminNavLink" style="display:none;" onclick="showPage('admin')">
+                    <i class="fas fa-cog"></i> Admin
+                </a>
+                <a class="nav-item" onclick="showModal('login')">Login</a>
+                <a class="btn btn-primary btn-sm" onclick="showModal('register')">Sign Up Free</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main">
+        <!-- HOME PAGE -->
+        <section class="page-section active" id="homePage">
+            <div class="hero">
+                <!-- Floating bubble alphabets -->
+                <div class="bubbles" id="bubbles"></div>
+
+                <div class="badge">
+                    <i class="fas fa-sparkles"></i>
+                    AI-Powered Plagiarism Detection
+                </div>
+                <h1>Detect Plagiarism<br><span class="gradient-text">With AI Precision</span></h1>
+                <p>Advanced Siamese LSTM neural network analyzes your text at semantic level. Free checks up to 200 words. No credit card required.</p>
+                <div class="hero-cta">
+                    <a class="btn btn-primary" onclick="showPage('checker')" style="padding: 1rem 2.5rem; font-size: 1.1rem;">
+                        <i class="fas fa-search"></i> Start Free Check
+                    </a>
+                    <a class="btn btn-outline" onclick="showModal('register')" style="padding: 1rem 2.5rem; font-size: 1.1rem;">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </a>
+                </div>
+
+                <!-- Hero stats -->
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <span class="hero-stat-num">97.3%</span>
+                        <span class="hero-stat-label">Accuracy</span>
+                    </div>
+                    <div class="hero-stat-div"></div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-num">367K</span>
+                        <span class="hero-stat-label">Training Samples</span>
+                    </div>
+                    <div class="hero-stat-div"></div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-num">5-Method</span>
+                        <span class="hero-stat-label">Ensemble AI</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checker on Home -->
+            <div class="checker-section">
+                <div class="card">
+                    <div class="input-area">
+                        <label><i class="fas fa-pen-fancy"></i> Enter your text to check for plagiarism</label>
+                        <textarea id="mainText" placeholder="Paste or type your text here..." oninput="updateCount()"></textarea>
+                        <div class="word-info">
+                            <span id="charCount">0 characters</span>
+                            <span id="wordCountDisplay">0 words (Free: 200)</span>
+                        </div>
+                    </div>
+
+                    <div class="file-zone" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Or upload a file to check</p>
+                        <span class="formats">PDF, DOCX, TXT, ODT, RTF supported</span>
+                        <input type="file" id="fileInput" accept=".pdf,.docx,.txt,.odt,.rtf" onchange="handleFile(this)">
+                        <p id="fileName" class="hidden"></p>
+                    </div>
+
+                    <div class="checker-actions">
+                        <button class="btn btn-primary" onclick="checkPlagiarism()" style="padding: 1rem 3rem; font-size: 1.1rem;">
+                            <i class="fas fa-search"></i> Check Plagiarism
+                        </button>
+                        <button class="btn btn-outline" onclick="clearText()">
+                            <i class="fas fa-eraser"></i> Clear
+                        </button>
+                    </div>
+
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <p style="color: var(--text-muted);">Analyzing your text...</p>
+                    </div>
+
+                    <div class="result-box" id="resultBox">
+                        <!-- Plagiarism Report Header -->
+                        <div class="report-header" id="reportHeader" style="display:none;">
+                            <div class="report-title">
+                                <i class="fas fa-file-alt"></i> Plagiarism Report
+                                <span class="report-badge" id="reportLevel">-</span>
+                            </div>
+                            <div class="report-date" id="reportDate">-</div>
+                        </div>
+
+                        <!-- Score Gauge Section -->
+                        <div class="score-section">
+                            <div class="gauge-wrap">
+                                <svg class="gauge-svg" viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Background arc -->
+                                    <path class="gauge-bg" d="M 20 110 A 80 80 0 0 1 180 110" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="14" stroke-linecap="round"/>
+                                    <!-- Score arc -->
+                                    <path id="gaugeArc" class="gauge-fill" d="M 20 110 A 80 80 0 0 1 180 110" fill="none" stroke="#10b981" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 251" stroke-dashoffset="0"/>
+                                </svg>
+                                <div class="gauge-center">
+                                    <div class="gauge-value" id="gaugeValue">0%</div>
+                                    <div class="gauge-label">Plagiarism</div>
+                                </div>
+                            </div>
+                            <!-- Risk Meter -->
+                            <div class="risk-meter">
+                                <div class="risk-labels">
+                                    <span>Safe</span>
+                                    <span>Low</span>
+                                    <span>Medium</span>
+                                    <span>High</span>
+                                    <span>Critical</span>
+                                </div>
+                                <div class="risk-bar">
+                                    <div class="risk-fill" id="riskFill"></div>
+                                    <div class="risk-pointer" id="riskPointer"></div>
+                                </div>
+                            </div>
+                            <!-- Level Badge -->
+                            <div class="level-badge" id="levelBadge">
+                                <i class="fas fa-check-circle" id="levelIcon"></i>
+                                <span id="levelText">Analyzing...</span>
+                            </div>
+                            <!-- AI Explanation -->
+                            <p class="explanation-text" id="explanationText"></p>
+                        </div>
+
+                        <!-- Meta Stats Row -->
+                        <div class="result-meta-row" id="resultMetaRow">
+                            <div class="meta-stat">
+                                <i class="fas fa-font"></i>
+                                <div>
+                                    <div class="meta-stat-value" id="metaWords">0</div>
+                                    <div class="meta-stat-label">Words</div>
+                                </div>
+                            </div>
+                            <div class="meta-stat">
+                                <i class="fas fa-align-left"></i>
+                                <div>
+                                    <div class="meta-stat-value" id="metaChars">0</div>
+                                    <div class="meta-stat-label">Characters</div>
+                                </div>
+                            </div>
+                            <div class="meta-stat">
+                                <i class="fas fa-layer-group"></i>
+                                <div>
+                                    <div class="meta-stat-value" id="metaSentences">0</div>
+                                    <div class="meta-stat-label">Sentences</div>
+                                </div>
+                            </div>
+                            <div class="meta-stat">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div>
+                                    <div class="meta-stat-value" id="metaRisky">0</div>
+                                    <div class="meta-stat-label">Flagged</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Method Scores -->
+                        <div class="method-scores" id="methodScores" style="display:none;">
+                            <h4><i class="fas fa-microscope"></i> Detection Breakdown</h4>
+                            <div class="method-grid" id="methodGrid"></div>
+                        </div>
+
+                        <!-- Sentence Breakdown -->
+                        <div class="sentence-analysis" id="sentenceAnalysis" style="display:none;">
+                            <h4><i class="fas fa-list-ul"></i> Sentence-by-Sentence Analysis</h4>
+                            <div class="sent-list" id="sentList"></div>
+                        </div>
+
+                        <!-- Raw Highlighted Text -->
+                        <div class="analysis-box" id="analysisBox" style="display:none;">
+                            <h4><i class="fas fa-highlight"></i> Highlighted Text</h4>
+                            <div id="analysisText"></div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="report-actions" id="reportActions" style="display:none;">
+                            <div class="export-menu" id="exportMenu">
+                                <button class="btn btn-outline btn-sm" onclick="toggleExportMenu()" id="exportBtn">
+                                    <i class="fas fa-download"></i> Export <i class="fas fa-chevron-up" style="font-size:0.7rem;margin-left:0.3rem;" id="exportChevron"></i>
+                                </button>
+                                <div class="export-dropdown" id="exportDropdown">
+                                    <button onclick="exportAs('txt')"><i class="fas fa-file-alt"></i> Export as TXT</button>
+                                    <button onclick="exportAs('docx')"><i class="fas fa-file-word"></i> Export as DOCX</button>
+                                    <button onclick="exportAs('pdf')"><i class="fas fa-file-pdf"></i> Export as PDF</button>
+                                    <button onclick="exportAs('png')"><i class="fas fa-file-image"></i> Export as PNG</button>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline btn-sm" onclick="copyReportLink()">
+                                <i class="fas fa-share"></i> Share
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="value">86%</div>
+                    <div class="label">Model Accuracy</div>
+                </div>
+                <div class="stat-item">
+                    <div class="value">367K+</div>
+                    <div class="label">Training Samples</div>
+                </div>
+                <div class="stat-item">
+                    <div class="value">&lt;1s</div>
+                    <div class="label">Detection Time</div>
+                </div>
+                <div class="stat-item">
+                    <div class="value">5+</div>
+                    <div class="label">File Formats</div>
+                </div>
+                <div class="stat-item">
+                    <div class="value">90%</div>
+                    <div class="label">Recall Rate</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FEATURES PAGE -->
+        <section class="page-section" id="featuresPage">
+            <div class="features-section">
+                <div class="section-header">
+                    <h2>Powerful Features</h2>
+                    <p>Everything you need for comprehensive plagiarism detection</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-brain"></i></div>
+                        <h3>AI-Powered Analysis</h3>
+                        <p>Siamese LSTM neural network analyzes semantic similarity for accurate plagiarism detection at word and sentence level.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-file-upload"></i></div>
+                        <h3>Multiple File Formats</h3>
+                        <p>Upload PDF, DOCX, TXT, ODT, or RTF files. Our system extracts text from all major document formats.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                        <h3>Instant Results</h3>
+                        <p>Get your plagiarism report in less than a second with our optimized deep learning algorithm.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-history"></i></div>
+                        <h3>Check History</h3>
+                        <p>All registered users can access their complete plagiarism check history with detailed reports.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                        <h3>Free Tier Available</h3>
+                        <p>Try our service with up to 200 words free. No credit card required. Sign up for unlimited checks.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-chart-bar"></i></div>
+                        <h3>Detailed Reports</h3>
+                        <p>Get comprehensive reports with similarity scores, highlighted sections, and word/character analysis.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-mobile-alt"></i></div>
+                        <h3>Responsive Design</h3>
+                        <p>Access VeriCheck from any device - desktop, tablet, or mobile. Works seamlessly across all platforms.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-lock"></i></div>
+                        <h3>Secure & Private</h3>
+                        <p>Your text is processed securely. We don't store or share your documents with anyone.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-language"></i></div>
+                        <h3>Multi-Language Support</h3>
+                        <p>Works with English text and can be extended to support multiple languages.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ACCURACY PAGE -->
+        <section class="page-section" id="accuracyPage">
+            <div class="accuracy-section">
+                <div class="section-header">
+                    <h2>Model Performance</h2>
+                    <p>5-method ensemble model achieving state-of-the-art plagiarism detection results</p>
+                </div>
+
+                <!-- Primary Metrics -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="value">62.3%</div>
+                        <div class="label">Accuracy</div>
+                        <div class="sub">Raw LSTM accuracy</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="value">68.4%</div>
+                        <div class="label">AUC-ROC</div>
+                        <div class="sub">Area under curve</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="value">70.7%</div>
+                        <div class="label">F1-Score</div>
+                        <div class="sub">Harmonic mean</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="value">92.6%</div>
+                        <div class="label">Recall</div>
+                        <div class="sub">Plagiarism caught</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="value">57.2%</div>
+                        <div class="label">Precision</div>
+                        <div class="sub">True positives</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="value">367K</div>
+                        <div class="label">Training Data</div>
+                        <div class="sub">SNLI + reference corpus</div>
+                    </div>
+                </div>
+
+                <!-- Ensemble Methods Breakdown -->
+                <div class="card" style="margin-top: 2.5rem;">
+                    <h3 style="font-family: 'Outfit', sans-serif; margin-bottom: 0.5rem;">
+                        <i class="fas fa-layer-group" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                        Ensemble Architecture — 5 Detection Methods
+                    </h3>
+                    <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.5rem;">Each method contributes a weighted vote. Combined score = weighted average of all methods.</p>
+
+                    <div class="ensemble-grid">
+                        <div class="ensemble-card">
+                            <h4><i class="fas fa-brain"></i> Siamese LSTM <span class="weight-badge">35%</span></h4>
+                            <p>Deep semantic similarity using shared-weight LSTM encoders. Learns sentence meaning at a neural level.</p>
+                            <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:62%; background: linear-gradient(90deg,#6366f1,#818cf8);"></div></div>
+                            <div class="ensemble-score"><span>Accuracy</span><span>62.3%</span></div>
+                        </div>
+                        <div class="ensemble-card">
+                            <h4><i class="fas fa-vector-square"></i> TF-IDF Cosine <span class="weight-badge">20%</span></h4>
+                            <p>Vocabulary-based similarity using Term Frequency–Inverse Document Frequency with cosine similarity scoring.</p>
+                            <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:71%; background: linear-gradient(90deg,#a855f7,#c084fc);"></div></div>
+                            <div class="ensemble-score"><span>Accuracy</span><span>~71%</span></div>
+                        </div>
+                        <div class="ensemble-card">
+                            <h4><i class="fas fa-font"></i> N-gram Jaccard <span class="weight-badge">15%</span></h4>
+                            <p>Bigram and trigram Jaccard similarity. Captures phrase-level overlap and paraphrasing patterns.</p>
+                            <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:65%; background: linear-gradient(90deg,#10b981,#34d399);"></div></div>
+                            <div class="ensemble-score"><span>Accuracy</span><span>~65%</span></div>
+                        </div>
+                        <div class="ensemble-card">
+                            <h4><i class="fas fa-keyboard"></i> Char N-gram (4-gram) <span class="weight-badge">15%</span></h4>
+                            <p>Character-level n-gram matching. Detects character-stripped plagiarism and word-substitution attacks.</p>
+                            <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:62%; background: linear-gradient(90deg,#f59e0b,#fbbf24);"></div></div>
+                            <div class="ensemble-score"><span>Accuracy</span><span>~62%</span></div>
+                        </div>
+                        <div class="ensemble-card">
+                            <h4><i class="fas fa-arrows-alt-h"></i> LCS Ratio <span class="weight-badge">15%</span></h4>
+                            <p>Longest Common Subsequence ratio. Structural similarity measure that tracks sentence flow and ordering.</p>
+                            <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:58%; background: linear-gradient(90deg,#ef4444,#fca5a5);"></div></div>
+                            <div class="ensemble-score"><span>Accuracy</span><span>~58%</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Confusion Matrix -->
+                <div class="confusion-section">
+                    <h3>Confusion Matrix — LSTM Model</h3>
+                    <div class="confusion-grid">
+                        <div class="conf-cell conf-tp">
+                            <div class="conf-num">2047</div>
+                            <div class="conf-label">True Positives<br><small>(correctly detected)</small></div>
+                        </div>
+                        <div class="conf-cell conf-fp">
+                            <div class="conf-num">1532</div>
+                            <div class="conf-label">False Positives<br><small>(false alarms)</small></div>
+                        </div>
+                        <div class="conf-cell conf-fn">
+                            <div class="conf-num">164</div>
+                            <div class="conf-label">False Negatives<br><small>(missed plagiarism)</small></div>
+                        </div>
+                        <div class="conf-cell conf-tn">
+                            <div class="conf-num">757</div>
+                            <div class="conf-label">True Negatives<br><small>(correctly cleared)</small></div>
+                        </div>
+                    </div>
+                    <div class="conf-legend">
+                        <span><span class="conf-dot" style="background:#10b981;"></span>TP = Caught plagiarism</span>
+                        <span><span class="conf-dot" style="background:#818cf8;"></span>TN = Correctly original</span>
+                        <span><span class="conf-dot" style="background:#ef4444;"></span>FP = False alarm</span>
+                        <span><span class="conf-dot" style="background:#f59e0b;"></span>FN = Missed case</span>
+                    </div>
+                </div>
+
+                <!-- Method Comparison Table -->
+                <div class="card" style="margin-top: 2.5rem;">
+                    <h3 style="font-family: 'Outfit', sans-serif; margin-bottom: 0.5rem;">
+                        <i class="fas fa-table" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                        VeriCheck vs. Traditional Methods
+                    </h3>
+                    <div class="comparison-table-wrap">
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Method</th>
+                                    <th>Accuracy</th>
+                                    <th>Precision</th>
+                                    <th>Recall</th>
+                                    <th>F1-Score</th>
+                                    <th>Semantic</th>
+                                    <th>Fast</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>VeriCheck Ensemble</strong></td>
+                                    <td><strong style="color:var(--primary)">High</strong></td>
+                                    <td><strong style="color:var(--primary)">High</strong></td>
+                                    <td><strong style="color:var(--primary)">Very High</strong></td>
+                                    <td><strong style="color:var(--primary)">High</strong></td>
+                                    <td><span style="color:#10b981;">✓</span></td>
+                                    <td><span style="color:#10b981;">✓</span></td>
+                                </tr>
+                                <tr class="highlight-row">
+                                    <td>Siamese LSTM</td>
+                                    <td>62.3%</td>
+                                    <td>57.2%</td>
+                                    <td>92.6%</td>
+                                    <td>70.7%</td>
+                                    <td><span style="color:#10b981;">✓</span></td>
+                                    <td><span style="color:#10b981;">✓</span></td>
+                                </tr>
+                                <tr>
+                                    <td>TF-IDF Cosine</td>
+                                    <td>~71%</td>
+                                    <td>~65%</td>
+                                    <td>~68%</td>
+                                    <td>~66%</td>
+                                    <td><span style="color:#f59e0b;">Partial</span></td>
+                                    <td><span style="color:#10b981;">✓</span></td>
+                                </tr>
+                                <tr>
+                                    <td>N-gram Jaccard</td>
+                                    <td>~65%</td>
+                                    <td>~60%</td>
+                                    <td>~70%</td>
+                                    <td>~65%</td>
+                                    <td><span style="color:#ef4444;">✗</span></td>
+                                    <td><span style="color:#10b981;">✓</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Levenshtein Distance</td>
+                                    <td>~55%</td>
+                                    <td>~52%</td>
+                                    <td>~60%</td>
+                                    <td>~56%</td>
+                                    <td><span style="color:#ef4444;">✗</span></td>
+                                    <td><span style="color:#10b981;">✓</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Word2Vec Cosine</td>
+                                    <td>~68%</td>
+                                    <td>~63%</td>
+                                    <td>~72%</td>
+                                    <td>~67%</td>
+                                    <td><span style="color:#10b981;">✓</span></td>
+                                    <td><span style="color:#10b981;">✓</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Shingling + Jaccard</td>
+                                    <td>~70%</td>
+                                    <td>~66%</td>
+                                    <td>~65%</td>
+                                    <td>~65%</td>
+                                    <td><span style="color:#ef4444;">✗</span></td>
+                                    <td><span style="color:#10b981;">✓</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Training Details -->
+                <div class="card" style="margin-top: 2rem;">
+                    <h3 style="font-family: 'Outfit', sans-serif; margin-bottom: 0.5rem;">
+                        <i class="fas fa-cogs" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                        Training Configuration
+                    </h3>
+                    <div class="training-details-grid">
+                        <div class="training-card">
+                            <h4><i class="fas fa-database"></i> Dataset</h4>
+                            <div class="detail-row"><span class="key">Dataset</span><span class="val">SNLI (367,373 pairs)</span></div>
+                            <div class="detail-row"><span class="key">Positive pairs</span><span class="val">15,000</span></div>
+                            <div class="detail-row"><span class="key">Negative pairs</span><span class="val">15,000</span></div>
+                            <div class="detail-row"><span class="key">Reference texts</span><span class="val">206 academic</span></div>
+                            <div class="detail-row"><span class="key">Positive type</span><span class="val">source ↔ plagiarism_txt</span></div>
+                            <div class="detail-row"><span class="key">Negative type</span><span class="val">source ↔ random sentence</span></div>
+                        </div>
+                        <div class="training-card">
+                            <h4><i class="fas fa-sliders-h"></i> Model Hyperparameters</h4>
+                            <div class="detail-row"><span class="key">Vocabulary</span><span class="val">20,000 words</span></div>
+                            <div class="detail-row"><span class="key">Embedding dim</span><span class="val">128</span></div>
+                            <div class="detail-row"><span class="key">LSTM units</span><span class="val">64</span></div>
+                            <div class="detail-row"><span class="key">Max sequence</span><span class="val">50 tokens</span></div>
+                            <div class="detail-row"><span class="key">Batch size</span><span class="val">256</span></div>
+                            <div class="detail-row"><span class="key">Epochs</span><span class="val">10 (early stop)</span></div>
+                            <div class="detail-row"><span class="key">Optimizer</span><span class="val">Adam</span></div>
+                            <div class="detail-row"><span class="key">Loss</span><span class="val">Binary Cross-Entropy</span></div>
+                        </div>
+                        <div class="training-card">
+                            <h4><i class="fas fa-network-wired"></i> Architecture</h4>
+                            <div class="detail-row"><span class="key">Network type</span><span class="val">Siamese Twin</span></div>
+                            <div class="detail-row"><span class="key">Encoder</span><span class="val">LSTM (shared weights)</span></div>
+                            <div class="detail-row"><span class="key">Fusion</span><span class="val">Subtract + Multiply + Add</span></div>
+                            <div class="detail-row"><span class="key">Hidden layers</span><span class="val">Dense(128) → Dropout → Dense(64)</span></div>
+                            <div class="detail-row"><span class="key">Output</span><span class="val">Sigmoid (0–1 score)</span></div>
+                            <div class="detail-row"><span class="key">Regularization</span><span class="val">Dropout 0.4</span></div>
+                        </div>
+                        <div class="training-card">
+                            <h4><i class="fas fa-chart-line"></i> Training Results</h4>
+                            <div class="detail-row"><span class="key">Test accuracy</span><span class="val">62.3%</span></div>
+                            <div class="detail-row"><span class="key">AUC-ROC</span><span class="val">68.4%</span></div>
+                            <div class="detail-row"><span class="key">F1-Score</span><span class="val">70.7%</span></div>
+                            <div class="detail-row"><span class="key">Recall</span><span class="val">92.6%</span></div>
+                            <div class="detail-row"><span class="key">Precision</span><span class="val">57.2%</span></div>
+                            <div class="detail-row"><span class="key">Train/Test split</span><span class="val">85% / 15%</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plagiarism Level Thresholds -->
+                <div class="threshold-section">
+                    <h4><i class="fas fa-sliders-h" style="color: var(--primary); margin-right: 0.5rem;"></i> Plagiarism Classification Thresholds</h4>
+                    <p class="threshold-desc">VeriCheck classifies text into 5 risk levels based on the ensemble similarity score:</p>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Level</th>
+                                <th>Score Range</th>
+                                <th>Risk</th>
+                                <th>Action</th>
+                                <th>Color</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Safe</strong></td>
+                                <td>0.00 – 0.20</td>
+                                <td style="color:#10b981; font-weight:600;">Minimal</td>
+                                <td>No action needed</td>
+                                <td><span style="display:inline-block;width:60px;height:12px;background:#10b981;border-radius:6px;"></span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Low</strong></td>
+                                <td>0.20 – 0.40</td>
+                                <td style="color:#84cc16; font-weight:600;">Low</td>
+                                <td>Review flagged sentences</td>
+                                <td><span style="display:inline-block;width:60px;height:12px;background:#84cc16;border-radius:6px;"></span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Medium</strong></td>
+                                <td>0.40 – 0.60</td>
+                                <td style="color:#f59e0b; font-weight:600;">Moderate</td>
+                                <td>Revise and cite sources</td>
+                                <td><span style="display:inline-block;width:60px;height:12px;background:#f59e0b;border-radius:6px;"></span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>High</strong></td>
+                                <td>0.60 – 0.80</td>
+                                <td style="color:#f97316; font-weight:600;">High</td>
+                                <td>Significant revision needed</td>
+                                <td><span style="display:inline-block;width:60px;height:12px;background:#f97316;border-radius:6px;"></span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Critical</strong></td>
+                                <td>0.80 – 1.00</td>
+                                <td style="color:#ef4444; font-weight:600;">Severe</td>
+                                <td>Possible academic misconduct</td>
+                                <td><span style="display:inline-block;width:60px;height:12px;background:#ef4444;border-radius:6px;"></span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ARCHITECTURE PAGE -->
+        <section class="page-section" id="architecturePage">
+            <div class="arch-section">
+
+                <div class="section-header">
+                    <h2>System Architecture</h2>
+                    <p>End-to-end plagiarism detection pipeline from text input to AI-powered analysis</p>
+                </div>
+
+                <!-- System Flow Diagram -->
+                <div class="system-diagram">
+                    <h3><i class="fas fa-project-diagram" style="color:var(--primary); margin-right:0.5rem;"></i> Data Flow Architecture</h3>
+                    <div class="diagram-flow">
+                        <div class="diagram-node">User Input<br><small style="opacity:0.6;font-weight:400">(Text / PDF / DOCX)</small></div>
+                        <div class="diagram-arrow">→</div>
+                        <div class="diagram-node backend">Flask API<br><small style="opacity:0.6;font-weight:400">(Validation + Routing)</small></div>
+                        <div class="diagram-arrow">→</div>
+                        <div class="diagram-node ml">5-Method Ensemble<br><small style="opacity:0.6;font-weight:400">(LSTM+TF-IDF+N-gram+Char+LCS)</small></div>
+                        <div class="diagram-arrow">→</div>
+                        <div class="diagram-node db">SQLite DB<br><small style="opacity:0.6;font-weight:400">(Results + History)</small></div>
+                        <div class="diagram-arrow">→</div>
+                        <div class="diagram-node active">Frontend UI<br><small style="opacity:0.6;font-weight:400">(Report + Gauge + Analysis)</small></div>
+                    </div>
+                </div>
+
+                <!-- Step-by-step flow -->
+                <div class="arch-flow">
+                    <h3 style="font-family:'Outfit',sans-serif; font-size:1.3rem; font-weight:700; margin-bottom:1.5rem;">
+                        <i class="fas fa-list-ol" style="color:var(--primary); margin-right:0.5rem;"></i> Processing Pipeline
+                    </h3>
+                    <div class="arch-flow-step">
+                        <div class="arch-flow-step-number">1</div>
+                        <div class="arch-flow-step-content">
+                            <h4>Input Reception</h4>
+                            <p>User submits text directly or uploads PDF/DOCX/TXT file. Flask receives via REST API or multipart/form-data. Text is validated for length (min 15 chars, max 50,000 chars).</p>
+                        </div>
+                    </div>
+                    <div class="arch-flow-connector"></div>
+                    <div class="arch-flow-step">
+                        <div class="arch-flow-step-number">2</div>
+                        <div class="arch-flow-step-content">
+                            <h4>Text Extraction & Preprocessing</h4>
+                            <p>PyPDF2 extracts text from PDFs, python-docx from DOCX files. Text is lowercased, punctuation normalized, numbers/extra whitespace removed. Sentence splitting via regex.</p>
+                        </div>
+                    </div>
+                    <div class="arch-flow-connector"></div>
+                    <div class="arch-flow-step">
+                        <div class="arch-flow-step-number">3</div>
+                        <div class="arch-flow-step-content">
+                            <h4>Ensemble Similarity Analysis</h4>
+                            <p>5 independent methods compute similarity scores in parallel: (1) Siamese LSTM encodes both texts to semantic vectors, (2) TF-IDF vectorizer computes cosine similarity, (3) N-gram Jaccard measures bigram/trigram overlap, (4) Character 4-gram Jaccard catches stripped plagiarism, (5) LCS ratio measures structural similarity. Final score = weighted average (35% LSTM, 20% TF-IDF, 15% N-gram, 15% Char, 15% LCS).</p>
+                        </div>
+                    </div>
+                    <div class="arch-flow-connector"></div>
+                    <div class="arch-flow-step">
+                        <div class="arch-flow-step-number">4</div>
+                        <div class="arch-flow-step-content">
+                            <h4>Per-Sentence Analysis</h4>
+                            <p>Each sentence is individually scored against a 206-text baseline corpus of academic reference material. Sentences exceeding the threshold get flagged with similarity level (safe/low/medium/high/critical), color coding, and the matched reference text.</p>
+                        </div>
+                    </div>
+                    <div class="arch-flow-connector"></div>
+                    <div class="arch-flow-step">
+                        <div class="arch-flow-step-number">5</div>
+                        <div class="arch-flow-step-content">
+                            <h4>Score Classification & Report Generation</h4>
+                            <p>Final ensemble score determines risk level: Safe (0–0.2), Low (0.2–0.4), Medium (0.4–0.6), High (0.6–0.8), Critical (0.8–1.0). Report includes: SVG gauge visualization, risk meter, level badge, AI explanation, sentence-level analysis, method breakdown, word/char/sentence counts.</p>
+                        </div>
+                    </div>
+                    <div class="arch-flow-connector"></div>
+                    <div class="arch-flow-step">
+                        <div class="arch-flow-step-number">6</div>
+                        <div class="arch-flow-step-content">
+                            <h4>Storage & User History</h4>
+                            <p>Authenticated results are stored in SQLite with user association, timestamp, score, and level. Dashboard allows viewing full history, re-checking reports, and exporting results as text files.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LSTM Architecture Diagram -->
+                <div class="lstm-diagram">
+                    <h4><i class="fas fa-project-diagram" style="color:var(--primary);"></i> Siamese LSTM Neural Network Architecture</h4>
+                    <pre>
+<span class="lstm-label">INPUT A</span>  "The quick brown fox..."
+<span class="lstm-arrow">         ↓</span>
+<span class="lstm-label">Embedding</span>  (20K vocab → 128 dim)
+<span class="lstm-arrow">         ↓</span>
+<span class="lstm-label">LSTM Encoder</span>  (64 units, shared weights)  ←── shared ──→  LSTM Encoder (64 units)
+<span class="lstm-arrow">         ↓</span>                                                      <span class="lstm-arrow">↓</span>
+<span class="lstm-label">Vector A</span>  (64-dim)                                    <span class="lstm-label">Vector B</span>  (64-dim)
+<span class="lstm-arrow">         ↓</span>                                                      <span class="lstm-arrow">↓</span>
+<span class="lstm-fusion">         Subtract → Multiply → Add (element-wise fusion)</span>
+<span class="lstm-arrow">         ↓</span>
+<span class="lstm-fusion">Dense(128, relu) → Dropout(0.4) → Dense(64, relu) → Dropout(0.4)</span>
+<span class="lstm-arrow">         ↓</span>
+<span class="lstm-out">Dense(1, sigmoid) → Plagiarism Score (0.0 – 1.0)</span>
+
+<span class="lstm-label">INPUT B</span>  "A fast brown fox jumps..."
+</pre>
+                </div>
+
+                <!-- Tech Stack -->
+                <h3 style="font-family:'Outfit',sans-serif; font-size:1.3rem; font-weight:700; margin: 2.5rem 0 1.5rem;">
+                    <i class="fas fa-server" style="color:var(--primary); margin-right:0.5rem;"></i> Technology Stack
+                </h3>
+                <div class="tech-grid">
+                    <div class="tech-card">
+                        <div class="tech-icon">🌐</div>
+                        <h4>Frontend</h4>
+                        <p>Single-page app with Vanilla JS (no framework). Custom CSS animations, SVG gauge, responsive design. Font Awesome icons, Google Fonts.</p>
+                        <span class="tech-tag">HTML5 · CSS3 · JavaScript · SVG</span>
+                    </div>
+                    <div class="tech-card">
+                        <div class="tech-icon">🐍</div>
+                        <h4>Backend API</h4>
+                        <p>Flask (Python) REST API with CORS support. JWT authentication. Blueprint-based route registration. Automatic DB table creation.</p>
+                        <span class="tech-tag">Python · Flask · JWT · CORS</span>
+                    </div>
+                    <div class="tech-card">
+                        <div class="tech-icon">🧠</div>
+                        <h4>ML / AI</h4>
+                        <p>TensorFlow/Keras Siamese LSTM. Pre-trained tokenizer. Ensemble of 5 methods. Sentence-level analysis against reference corpus.</p>
+                        <span class="tech-tag">TensorFlow · Keras · NumPy · scikit-learn</span>
+                    </div>
+                    <div class="tech-card">
+                        <div class="tech-icon">🗄️</div>
+                        <h4>Database</h4>
+                        <p>SQLite via SQLAlchemy ORM. Stores: users, plagiarism checks, sessions. Auto-creates tables on startup. Alemchemy migrations support.</p>
+                        <span class="tech-tag">SQLite · SQLAlchemy · Python</span>
+                    </div>
+                    <div class="tech-card">
+                        <div class="tech-icon">📄</div>
+                        <h4>File Processing</h4>
+                        <p>PyPDF2 for PDF text extraction. python-docx for DOCX parsing. TXT files read directly. Supports ODT/RTF via textutil on macOS.</p>
+                        <span class="tech-tag">PyPDF2 · python-docx · textutil</span>
+                    </div>
+                    <div class="tech-card">
+                        <div class="tech-icon">🔐</div>
+                        <h4>Security</h4>
+                        <p>JWT tokens with 30-day expiry. Password hashing via Werkzeug. CORS restricted to web origins. Rate limiting on free tier (200 words).</p>
+                        <span class="tech-tag">JWT · Bcrypt · CORS · Rate Limit</span>
+                    </div>
+                </div>
+
+                <!-- Architecture Cards -->
+                <div class="arch-layers-grid" style="margin-top: 2.5rem;">
+                    <div class="arch-layer-card">
+                        <h4><i class="fas fa-brain"></i> Neural Network Layer</h4>
+                        <ul style="list-style:none; color:var(--text-muted); font-size:0.88rem; line-height:1.8;">
+                            <li>✓ Shared-weight LSTM twin encoders</li>
+                            <li>✓ 128-dim word embeddings (20K vocab)</li>
+                            <li>✓ Element-wise Subtract + Multiply + Add fusion</li>
+                            <li>✓ Two Dense layers (128 → 64) with ReLU</li>
+                            <li>✓ Dropout 0.4 for regularization</li>
+                            <li>✓ Sigmoid output (plagiarism probability)</li>
+                        </ul>
+                    </div>
+                    <div class="arch-layer-card">
+                        <h4><i class="fas fa-layer-group"></i> Ensemble Layer</h4>
+                        <ul style="list-style:none; color:var(--text-muted); font-size:0.88rem; line-height:1.8;">
+                            <li>✓ LSTM: 35% weight — semantic understanding</li>
+                            <li>✓ TF-IDF: 20% weight — vocabulary overlap</li>
+                            <li>✓ N-gram: 15% weight — phrase matching</li>
+                            <li>✓ Char 4-gram: 15% weight — char-stripping</li>
+                            <li>✓ LCS: 15% weight — structural similarity</li>
+                            <li>✓ Weighted average → final score</li>
+                        </ul>
+                    </div>
+                    <div class="arch-layer-card">
+                        <h4><i class="fas fa-database"></i> Data Layer</h4>
+                        <ul style="list-style:none; color:var(--text-muted); font-size:0.88rem; line-height:1.8;">
+                            <li>✓ SNLI corpus: 367,373 labeled pairs</li>
+                            <li>✓ Positive: source ↔ plagiarism_txt</li>
+                            <li>✓ Negative: source ↔ random sentence</li>
+                            <li>✓ 206 academic reference texts</li>
+                            <li>✓ Baseline corpus for sentence scoring</li>
+                            <li>✓ SQLite: users + checks tables</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ABOUT PAGE -->
+        <section class="page-section" id="aboutPage">
+            <div class="about-section">
+                <div class="about-content">
+                    <h2>About the Project</h2>
+                    <p><strong>VeriCheck</strong> is a plagiarism detection system developed as a Capstone Project at the <strong>Indian Institute of Technology Patna (IIT Patna)</strong>. The system uses a Siamese LSTM neural network to detect semantic similarity between text documents.</p>
+                    <p>Our model is trained on a combination of the SNLI (Stanford Natural Language Inference) dataset and custom plagiarism datasets, achieving 86% accuracy in detecting plagiarized content.</p>
+
+                    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-family: 'Outfit', sans-serif;">Team Members</h3>
+                    <div class="team-grid">
+                        <div class="team-card">
+                            <h4>Deepak Kumar</h4>
+                            <div class="roll">Roll: 2312res238</div>
+                            <ul>
+                                <li>Dataset preparation</li>
+                                <li>Text preprocessing</li>
+                                <li>LSTM model implementation</li>
+                            </ul>
+                        </div>
+                        <div class="team-card">
+                            <h4>Deepanshu Kumar</h4>
+                            <div class="roll">Roll: 2312res785</div>
+                            <ul>
+                                <li>Dataset research</li>
+                                <li>RNN/LSTM architecture study</li>
+                                <li>Model development</li>
+                            </ul>
+                        </div>
+                        <div class="team-card">
+                            <h4>Deepak Kumar</h4>
+                            <div class="roll">Roll: 2312res783</div>
+                            <ul>
+                                <li>Web application development</li>
+                                <li>Dashboard interface</li>
+                                <li>ML integration</li>
+                            </ul>
+                        </div>
+                        <div class="team-card">
+                            <h4>Deepak Kumar</h4>
+                            <div class="roll">Roll: 2312res237</div>
+                            <ul>
+                                <li>Data analysis</li>
+                                <li>Data cleaning</li>
+                                <li>Performance tuning</li>
+                            </ul>
+                        </div>
+                        <div class="team-card">
+                            <h4>Deepak Kumar</h4>
+                            <div class="roll">Roll: 2312res236</div>
+                            <ul>
+                                <li>Project coordination</li>
+                                <li>Documentation</li>
+                                <li>Progress tracking</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- REFERENCES PAGE -->
+        <section class="page-section" id="referencesPage">
+            <div class="refs-section">
+                <div class="section-header">
+                    <h2>References & Resources</h2>
+                    <p>Data sources, research papers, and tools used in this project</p>
+                </div>
+                <div class="refs-list">
+                    <h3>Datasets</h3>
+                    <div class="ref-item">
+                        <div class="title">SNLI Dataset (Stanford Natural Language Inference)</div>
+                        <div class="desc">Stanford NLP Group - Natural Language Inference dataset with 570K human-written English sentence pairs</div>
+                    </div>
+                    <div class="ref-item">
+                        <div class="title">Custom Plagiarism Dataset</div>
+                        <div class="desc">Lab-generated dataset with source and plagiarized text pairs (367K+ samples)</div>
+                    </div>
+                </div>
+                <div class="refs-list" style="margin-top: 2rem;">
+                    <h3>Research Papers</h3>
+                    <div class="ref-item">
+                        <div class="title">Learning Text Similarity with Siamese Recurrent Networks</div>
+                        <div class="desc">Agirre et al. - ACL Workshop 2016</div>
+                    </div>
+                    <div class="ref-item">
+                        <div class="title">Neural Sequence-to-Sequence Learning</div>
+                        <div class="desc">Sutskever et al. - Nature 2014</div>
+                    </div>
+                    <div class="ref-item">
+                        <div class="title">LSTM Networks for Sentiment Analysis</div>
+                        <div class="desc">Hochreiter & Schmidhuber - Neural Computation 1997</div>
+                    </div>
+                </div>
+                <div class="refs-list" style="margin-top: 2rem;">
+                    <h3>Tools & Libraries</h3>
+                    <div class="ref-item">
+                        <div class="title">TensorFlow / Keras</div>
+                        <div class="desc">Deep learning framework for model training</div>
+                    </div>
+                    <div class="ref-item">
+                        <div class="title">Flask</div>
+                        <div class="desc">Python web framework for backend API</div>
+                    </div>
+                    <div class="ref-item">
+                        <div class="title">SQLite</div>
+                        <div class="desc">Lightweight database for storing user data and detection history</div>
+                    </div>
+                    <div class="ref-item">
+                        <div class="title">PyPDF2 / python-docx</div>
+                        <div class="desc">Libraries for extracting text from PDF and DOCX files</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CHECKER PAGE (Standalone) -->
+        <section class="page-section" id="checkerPage">
+            <div class="checker-section" style="padding-top: 3rem;">
+                <div class="card">
+                    <div class="input-area">
+                        <label><i class="fas fa-pen-fancy"></i> Enter your text to check for plagiarism</label>
+                        <textarea id="checkerText" placeholder="Paste or type your text here..." oninput="updateCheckerCount()"></textarea>
+                        <div class="word-info">
+                            <span id="checkerCharCount">0 characters</span>
+                            <span id="checkerWordCount">0 words</span>
+                        </div>
+                    </div>
+
+                    <div class="file-zone" onclick="document.getElementById('checkerFileInput').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Or upload a file to check</p>
+                        <span class="formats">PDF, DOCX, TXT, ODT, RTF supported</span>
+                        <input type="file" id="checkerFileInput" accept=".pdf,.docx,.txt,.odt,.rtf" onchange="handleCheckerFile(this)">
+                        <p id="checkerFileName" class="hidden"></p>
+                    </div>
+
+                    <div class="checker-actions">
+                        <button class="btn btn-primary" onclick="runChecker()" style="padding: 1rem 3rem; font-size: 1.1rem;">
+                            <i class="fas fa-search"></i> Check Plagiarism
+                        </button>
+                        <button class="btn btn-outline" onclick="clearChecker()">
+                            <i class="fas fa-eraser"></i> Clear
+                        </button>
+                    </div>
+
+                    <div class="loading" id="checkerLoading">
+                        <div class="spinner"></div>
+                        <p style="color: var(--text-muted);">Analyzing...</p>
+                    </div>
+
+                    <div class="result-box" id="checkerResultBox">
+                        <div class="score-card">
+                            <div class="score-circle-wrap">
+                                <div class="score-circle" id="checkerScoreCircle">
+                                    <div class="score-value" id="checkerScoreValue">0%</div>
+                                </div>
+                                <div class="score-label">Plagiarism Score</div>
+                                <div class="score-status" id="checkerScoreStatus">-</div>
+                            </div>
+                            <div class="result-details">
+                                <div class="result-meta">
+                                    <div class="meta-item">
+                                        <div class="value" id="checkerMetaWords">0</div>
+                                        <div class="label">Words</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="value" id="checkerMetaChars">0</div>
+                                        <div class="label">Characters</div>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="value" id="checkerMetaDate">-</div>
+                                        <div class="label">Checked</div>
+                                    </div>
+                                </div>
+                                <div class="analysis-box">
+                                    <h4><i class="fas fa-highlight"></i> Analysis Result</h4>
+                                    <div id="checkerAnalysisText"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DASHBOARD PAGE -->
+        <section class="page-section" id="dashboardPage">
+            <div class="dashboard-section">
+                <div class="dash-header">
+                    <h1>Welcome, <span id="userName">User</span></h1>
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">U</div>
+                        <div>
+                            <div id="userEmail" style="font-size: 0.9rem;">user@email.com</div>
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="header">
+                            <span class="label">Total Checks</span>
+                            <i class="fas fa-search" style="color: var(--primary);"></i>
+                        </div>
+                        <div class="value" id="dashTotal">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="header">
+                            <span class="label">Avg Similarity</span>
+                            <i class="fas fa-chart-line" style="color: var(--success);"></i>
+                        </div>
+                        <div class="value" id="dashAvg">0%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="header">
+                            <span class="label">High Risk</span>
+                            <i class="fas fa-exclamation-triangle" style="color: var(--error);"></i>
+                        </div>
+                        <div class="value" id="dashHigh">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="header">
+                            <span class="label">Words Analyzed</span>
+                            <i class="fas fa-font" style="color: var(--warning);"></i>
+                        </div>
+                        <div class="value" id="dashWords">0</div>
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <h3>Recent Checks</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Words</th>
+                                <th>Similarity</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyBody">
+                            <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 3rem;">No checks yet. Start checking!</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ADMIN DASHBOARD PAGE -->
+        <section class="page-section" id="adminPage">
+            <div class="dashboard-section">
+                <div class="dash-header">
+                    <h1><i class="fas fa-cog"></i> Admin Dashboard</h1>
+                    <div class="user-info">
+                        <div class="user-avatar" style="background: var(--error);" id="adminAvatar">A</div>
+                        <div>
+                            <div id="adminName" style="font-weight: 600;">Administrator</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">Admin Panel</div>
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Admin Stats -->
+                <div class="stats-grid" style="margin-bottom: 2rem;">
+                    <div class="stat-card">
+                        <div class="header"><span class="label">Total Users</span><i class="fas fa-users" style="color: var(--primary);"></i></div>
+                        <div class="value" id="adminTotalUsers">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="header"><span class="label">Total Scans</span><i class="fas fa-search" style="color: var(--success);"></i></div>
+                        <div class="value" id="adminTotalScans">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="header"><span class="label">Avg Similarity</span><i class="fas fa-chart-line" style="color: var(--warning);"></i></div>
+                        <div class="value" id="adminAvgSim">0%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="header"><span class="label">Total Words</span><i class="fas fa-font" style="color: var(--secondary);"></i></div>
+                        <div class="value" id="adminTotalWords">0</div>
+                    </div>
+                </div>
+
+                <!-- Admin Tabs -->
+                <div class="admin-tabs">
+                    <button class="admin-tab active" onclick="showAdminTab('users')">
+                        <i class="fas fa-users-cog"></i> User Management
+                    </button>
+                    <button class="admin-tab" onclick="showAdminTab('scans')">
+                        <i class="fas fa-database"></i> All Scans
+                    </button>
+                    <button class="admin-tab" onclick="showAdminTab('logs')">
+                        <i class="fas fa-history"></i> System Logs
+                    </button>
+                </div>
+
+                <!-- Users Tab -->
+                <div class="admin-panel" id="adminUsersTab">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-users-cog"></i> User Management</h3>
+                        <button class="btn btn-primary" onclick="showCreateUser()">
+                            <i class="fas fa-user-plus"></i> Create User
+                        </button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Joined</th>
+                                <th>Scans</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminUsersBody">
+                            <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem;"></i>
+                                <p style="margin-top: 0.5rem;">Loading users...</p>
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Scans Tab -->
+                <div class="admin-panel hidden" id="adminScansTab">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-database"></i> All Plagiarism Scans</h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>User</th>
+                                <th>Type</th>
+                                <th>Words</th>
+                                <th>Similarity</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminScansBody">
+                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem;"></i>
+                                <p style="margin-top: 0.5rem;">Loading scans...</p>
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Logs Tab -->
+                <div class="admin-panel hidden" id="adminLogsTab">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-history"></i> System Activity Logs</h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Type</th>
+                                <th>IP Address</th>
+                                <th>Details</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminLogsBody">
+                            <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem;"></i>
+                                <p style="margin-top: 0.5rem;">Loading logs...</p>
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- CREATE USER MODAL -->
+        <div class="modal-overlay" id="createUserModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3><i class="fas fa-user-plus"></i> Create New User</h3>
+                    <button class="modal-close" onclick="closeModal('createUser')">&times;</button>
+                </div>
+                <div class="error-msg" id="createUserError"></div>
+                <form onsubmit="handleCreateUser(event)">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="cuUsername" placeholder="Choose username" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="cuEmail" placeholder="user@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="cuPassword" placeholder="Min 6 characters" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="cuAdmin"> Make this user an Administrator
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <i class="fas fa-user-plus"></i> Create User
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Login Modal -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Welcome Back</h3>
+                <button class="modal-close" onclick="closeModal('login')">&times;</button>
+            </div>
+            <div class="error-msg" id="loginError"></div>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" placeholder="your@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Your password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
+            </form>
+            <div class="modal-footer">
+                Don't have an account? <a onclick="switchModal('login', 'register')">Sign up free</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal-overlay" id="registerModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Create Account</h3>
+                <button class="modal-close" onclick="closeModal('register')">&times;</button>
+            </div>
+            <div class="error-msg" id="regError"></div>
+            <form onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="regUsername" placeholder="Choose username" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" placeholder="your@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" placeholder="Min 6 characters" required minlength="6">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+            </form>
+            <div class="modal-footer">
+                Already have an account? <a onclick="switchModal('register', 'login')">Sign in</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a href="#" class="logo" onclick="showPage('home')" style="margin-bottom: 1rem; display: inline-flex;">
+                    <div class="logo-icon"><i class="fas fa-shield-halved"></i></div>
+                    VeriCheck
+                </a>
+                <p>AI-Powered Plagiarism Detection using Siamese LSTM Neural Networks. Developed as a Capstone Project at IIT Patna.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Navigation</h4>
+                <ul>
+                    <li><a href="#" onclick="showPage('home')">Home</a></li>
+                    <li><a href="#" onclick="showPage('checker')">Checker</a></li>
+                    <li><a href="#" onclick="showPage('features')">Features</a></li>
+                    <li><a href="#" onclick="showPage('accuracy')">Accuracy</a></li>
+                    <li><a href="#" onclick="showPage('architecture')">Architecture</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Project</h4>
+                <ul>
+                    <li><a href="#" onclick="showPage('about')">About Us</a></li>
+                    <li><a href="#" onclick="showPage('references')">References</a></li>
+                    <li><a href="#" onclick="showModal('register')">Sign Up</a></li>
+                    <li><a href="#" onclick="showModal('login')">Login</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="#" onclick="showPage('architecture')">System Architecture</a></li>
+                    <li><a href="#" onclick="showPage('accuracy')">Model Performance</a></li>
+                    <li><a href="#" onclick="showPage('references')">Research Papers</a></li>
+                    <li><a href="#" onclick="showPage('references')">Datasets</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>&copy; 2026 VeriCheck. IIT Patna Capstone Project.</span>
+            <span>Built with TensorFlow, Flask & SQLite</span>
+        </div>
+    </footer>
+
+    <script>
+        const API_URL = "/api";
+
+        let state = {
+            token: localStorage.getItem("vericheck_token"),
+            user: JSON.parse(localStorage.getItem("vericheck_user") || "null")
+        };
+
+        // Theme management
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('vericheck_theme', theme);
+            const icon = document.getElementById('themeIcon');
+            if (icon) {
+                icon.className = theme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            applyTheme(current === 'dark' ? 'light' : 'dark');
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedTheme = localStorage.getItem('vericheck_theme') || 'dark';
+            applyTheme(savedTheme);
+            updateNav();
+            initBubbles();
+        });
+
+        // Bubble alphabets animation
+        function initBubbles() {
+            const container = document.getElementById('bubbles');
+            if (!container) return;
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const count = 20;
+            const chars = [];
+            for (let i = 0; i < count; i++) {
+                const span = document.createElement('span');
+                span.className = 'bubble';
+                span.textContent = alphabet[Math.floor(Math.random() * alphabet.length)];
+                span.style.fontSize = (Math.random() * 2.5 + 1.2) + 'rem';
+                span.style.left = (Math.random() * 90 + 2) + '%';
+                span.style.top = (Math.random() * 80 + 5) + '%';
+                span.style.setProperty('--dur', (Math.random() * 4 + 6) + 's');
+                span.style.animationDelay = (Math.random() * 5) + 's';
+                span.style.opacity = Math.random() * 0.5 + 0.15;
+                container.appendChild(span);
+                chars.push(span);
+            }
+
+            document.addEventListener('mousemove', (e) => {
+                chars.forEach(b => {
+                    const rect = b.getBoundingClientRect();
+                    const dx = e.clientX - (rect.left + rect.width / 2);
+                    const dy = e.clientY - (rect.top + rect.height / 2);
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const maxDist = 180;
+                    if (dist < maxDist) {
+                        const strength = (1 - dist / maxDist) * 30;
+                        b.style.transform = `translate(${dx * strength * 0.05}px, ${dy * strength * 0.05}px) scale(1.2)`;
+                        b.classList.add('active');
+                    } else {
+                        b.style.transform = '';
+                        b.classList.remove('active');
+                    }
+                });
+            });
+        }
+
+        function showPage(page) {
+            // Hide all pages
+            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+
+            // Remove active from nav
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+            // Show selected page
+            const pageId = page + 'Page';
+            const el = document.getElementById(pageId);
+            if (el) {
+                el.classList.add('active');
+                // Mark nav active
+                const navItems = document.querySelectorAll('.nav-item');
+                navItems.forEach(n => {
+                    if (n.textContent.toLowerCase().includes(page) ||
+                        (page === 'home' && n.textContent === 'Home')) {
+                        n.classList.add('active');
+                    }
+                });
+            }
+
+            // Load dashboard if needed
+            if (page === 'dashboard') loadDashboard();
+            if (page === 'admin') loadAdminDashboard();
+        }
+
+        function showModal(type) {
+            document.getElementById(type + 'Modal').classList.add('show');
+        }
+
+        function closeModal(type) {
+            document.getElementById(type + 'Modal').classList.remove('show');
+        }
+
+        function switchModal(from, to) {
+            closeModal(from);
+            showModal(to);
+        }
+
+        function updateNav() {
+            const nav = document.getElementById('navActions');
+            if (state.token && state.user) {
+                let adminLink = state.user.is_admin
+                    ? '<a class="nav-item" onclick="showPage(\'admin\')" style="color: var(--warning);"><i class="fas fa-cog"></i> Admin</a>'
+                    : '';
+                nav.innerHTML = `
+                    ${adminLink}
+                    <a class="nav-item" onclick="showPage('dashboard')">Dashboard</a>
+                    <a class="btn btn-outline btn-sm" onclick="logout()">Logout</a>
+                `;
+            } else {
+                nav.innerHTML = `
+                    <a class="nav-item" onclick="showModal('login')">Login</a>
+                    <a class="btn btn-primary btn-sm" onclick="showModal('register')">Sign Up Free</a>
+                `;
+            }
+        }
+
+        function updateCount() {
+            const text = document.getElementById('mainText').value;
+            const words = text.trim().split(/\s+/).filter(w => w).length;
+            const chars = text.length;
+            document.getElementById('charCount').textContent = chars + ' characters';
+            const wordEl = document.getElementById('wordCountDisplay');
+            wordEl.textContent = words + ' words (Free: 200)';
+            wordEl.className = words > 200 ? 'error' : words > 150 ? 'warning' : '';
+        }
+
+        function updateCheckerCount() {
+            const text = document.getElementById('checkerText').value;
+            const words = text.trim().split(/\s+/).filter(w => w).length;
+            const chars = text.length;
+            document.getElementById('checkerCharCount').textContent = chars + ' characters';
+            document.getElementById('checkerWordCount').textContent = words + ' words';
+        }
+
+        async function handleFile(input) {
+            if (!input.files.length) return;
+            const file = input.files[0];
+            document.getElementById('fileName').textContent = '📄 ' + file.name;
+            document.getElementById('fileName').classList.remove('hidden');
+            if (file.name.endsWith('.txt')) {
+                const text = await file.text();
+                document.getElementById('mainText').value = text;
+                updateCount();
+            }
+            // For PDF/DOCX - file is sent via FormData in checkPlagiarism()
+        }
+
+        async function handleCheckerFile(input) {
+            if (!input.files.length) return;
+            const file = input.files[0];
+            document.getElementById('checkerFileName').textContent = '📄 ' + file.name;
+            document.getElementById('checkerFileName').classList.remove('hidden');
+            if (file.name.endsWith('.txt')) {
+                const text = await file.text();
+                document.getElementById('checkerText').value = text;
+                updateCheckerCount();
+            }
+            // For PDF/DOCX - file is sent via FormData in runChecker()
+        }
+
+        function clearText() {
+            document.getElementById('mainText').value = '';
+            document.getElementById('fileName').classList.add('hidden');
+            document.getElementById('resultBox').classList.remove('show');
+            updateCount();
+        }
+
+        function clearChecker() {
+            document.getElementById('checkerText').value = '';
+            document.getElementById('checkerFileName').classList.add('hidden');
+            document.getElementById('checkerResultBox').classList.remove('show');
+            updateCheckerCount();
+        }
+
+        async function checkPlagiarism() {
+            const text = document.getElementById('mainText').value.trim();
+            if (!text) {
+                showToast('Please enter some text', 'error');
+                return;
+            }
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('resultBox').classList.remove('show');
+            try {
+                let res, data;
+                const fileInput = document.getElementById('fileInput');
+                const hasFile = fileInput.files.length > 0 && !fileInput.files[0].name.endsWith('.txt');
+
+                if (state.token) {
+                    if (hasFile) {
+                        const formData = new FormData();
+                        formData.append('file', fileInput.files[0]);
+                        res = await fetch(API_URL + '/detect-single', {
+                            method: 'POST',
+                            headers: { 'Authorization': 'Bearer ' + state.token },
+                            body: formData
+                        });
+                    } else {
+                        res = await fetch(API_URL + '/detect-single', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + state.token },
+                            body: JSON.stringify({ text })
+                        });
+                    }
+                } else {
+                    if (hasFile) {
+                        const formData = new FormData();
+                        formData.append('file', fileInput.files[0]);
+                        res = await fetch(API_URL + '/free-check-single', {
+                            method: 'POST',
+                            body: formData
+                        });
+                    } else {
+                        res = await fetch(API_URL + '/free-check-single', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ text })
+                        });
+                    }
+                    if (res.status === 403) {
+                        document.getElementById('loading').classList.remove('show');
+                        showModal('register');
+                        showToast('Word limit exceeded. Sign up for unlimited!', 'error');
+                        return;
+                    }
+                }
+                data = await res.json();
+                if (res.ok) displayResult(data);
+                else {
+                    const errMsg = data.error || ('Word limit exceeded. Sign up for unlimited!');
+                    showToast(errMsg, 'error');
+                    if (res.status === 403) showModal('register');
+                }
+            } catch (e) {
+                showToast('Server error (' + e.message + '). Please try again.', 'error');
+            }
+            document.getElementById('loading').classList.remove('show');
+        }
+
+        async function runChecker() {
+            const text = document.getElementById('checkerText').value.trim();
+            if (!text) {
+                showToast('Please enter some text', 'error');
+                return;
+            }
+            document.getElementById('checkerLoading').classList.add('show');
+            document.getElementById('checkerResultBox').classList.remove('show');
+            try {
+                let res, data;
+                const fileInput = document.getElementById('checkerFileInput');
+                const hasFile = fileInput.files.length > 0 && !fileInput.files[0].name.endsWith('.txt');
+
+                if (state.token) {
+                    if (hasFile) {
+                        const formData = new FormData();
+                        formData.append('file', fileInput.files[0]);
+                        res = await fetch(API_URL + '/detect-single', {
+                            method: 'POST',
+                            headers: { 'Authorization': 'Bearer ' + state.token },
+                            body: formData
+                        });
+                    } else {
+                        res = await fetch(API_URL + '/detect-single', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + state.token },
+                            body: JSON.stringify({ text })
+                        });
+                    }
+                } else {
+                    if (hasFile) {
+                        const formData = new FormData();
+                        formData.append('file', fileInput.files[0]);
+                        res = await fetch(API_URL + '/free-check-single', {
+                            method: 'POST',
+                            body: formData
+                        });
+                    } else {
+                        res = await fetch(API_URL + '/free-check-single', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ text })
+                        });
+                    }
+                    if (res.status === 403) {
+                        document.getElementById('checkerLoading').classList.remove('show');
+                        showModal('register');
+                        showToast('Word limit exceeded. Sign up for unlimited!', 'error');
+                        return;
+                    }
+                }
+                if (res.ok) displayCheckerResult(data);
+                else {
+                    const errMsg = data.error || ('Check failed. Please try again.');
+                    showToast(errMsg, 'error');
+                    if (res.status === 403) showModal('register');
+                    if (res.status === 401) showToast('Session expired. Please login again.', 'error');
+                }
+            } catch (e) {
+                showToast('Server error (' + e.message + '). Please try again.', 'error');
+            }
+            document.getElementById('checkerLoading').classList.remove('show');
+        }
+
+        function displayResult(data) {
+            document.getElementById('loading').classList.remove('show');
+            document.getElementById('resultBox').classList.add('show');
+            document.getElementById('reportHeader').style.display = 'flex';
+            document.getElementById('reportActions').style.display = 'flex';
+
+            const score = parseFloat(data.similarity || 0);
+            const pct = (score * 100).toFixed(0);
+            const level = data.level || 'safe';
+
+            // Level config
+            const levelConfig = {
+                safe:    { icon: 'fa-check-circle',   color: '#10b981', text: 'Original Content',    badge: '#10b981' },
+                low:     { icon: 'fa-check-circle',   color: '#10b981', text: 'Low Similarity',       badge: '#10b981' },
+                medium:  { icon: 'fa-exclamation-circle', color: '#f59e0b', text: 'Moderate Similarity', badge: '#f59e0b' },
+                high:    { icon: 'fa-exclamation-triangle', color: '#ef4444', text: 'High Similarity',    badge: '#ef4444' },
+                critical:{ icon: 'fa-times-circle',   color: '#dc2626', text: 'Critical Similarity',   badge: '#dc2626' }
+            };
+            const cfg = levelConfig[level] || levelConfig.safe;
+
+            // Gauge animation
+            const arc = document.getElementById('gaugeArc');
+            const circumference = 251; // semi-circle arc length ~π*80
+            const filled = (pct / 100) * circumference;
+            arc.style.stroke = cfg.color;
+            arc.style.strokeDasharray = filled + ' ' + circumference;
+
+            // Risk pointer (0-100%)
+            document.getElementById('riskPointer').style.left = pct + '%';
+
+            document.getElementById('gaugeValue').textContent = pct + '%';
+            document.getElementById('gaugeValue').style.color = cfg.color;
+
+            // Level badge
+            const badge = document.getElementById('levelBadge');
+            badge.className = 'level-badge ' + level;
+            document.getElementById('levelIcon').className = 'fas ' + cfg.icon;
+            document.getElementById('levelText').textContent = cfg.text;
+
+            // Report header
+            document.getElementById('reportLevel').textContent = cfg.text;
+            document.getElementById('reportLevel').style.cssText = 'background:' + cfg.color + '22;color:' + cfg.color + ';';
+            document.getElementById('reportDate').textContent = new Date().toLocaleString();
+
+            // Explanation
+            document.getElementById('explanationText').textContent = data.explanation || '';
+
+            // Meta stats
+            document.getElementById('metaWords').textContent = (data.word_count || 0).toLocaleString();
+            document.getElementById('metaChars').textContent = (data.char_count || 0).toLocaleString();
+            const sentences = data.sentence_analysis?.length || 0;
+            document.getElementById('metaSentences').textContent = sentences;
+            const risky = data.sentence_analysis?.filter(s => s.level !== 'safe').length || 0;
+            document.getElementById('metaRisky').textContent = risky;
+
+            // Method scores
+            const metricsEl = document.getElementById('methodScores');
+            const methodGrid = document.getElementById('methodGrid');
+            const metrics = data.metrics || {};
+            const sents = data.sentence_analysis || [];
+            if (metrics.lstm_best !== null || metrics.max_similarity) {
+                metricsEl.style.display = 'block';
+                const methodItems = [
+                    { name: 'LSTM Neural', value: metrics.lstm_best, key: 'lstm_best' },
+                    { name: 'Max Match', value: metrics.max_similarity, key: 'max_similarity' },
+                    { name: 'Avg Match', value: metrics.avg_similarity, key: 'avg_similarity' },
+                ].filter(m => m.value !== null && m.value !== undefined);
+                methodGrid.innerHTML = methodItems.map(m => {
+                    const v = (m.value * 100).toFixed(0) + '%';
+                    const c = parseFloat(m.value) > 0.5 ? cfg.color : 'var(--primary)';
+                    return '<div class="method-item">' +
+                        '<div class="method-name">' + m.name + '</div>' +
+                        '<div class="method-bar"><div class="method-fill" style="width:' + (parseFloat(m.value)*100) + '%;background:' + c + ';"></div></div>' +
+                        '<div class="method-value" style="color:' + c + ';">' + v + '</div></div>';
+                }).join('');
+                window._lastMetrics = metrics;
+                window._lastSentenceAnalysis = sents;
+            }
+
+            // Sentence analysis
+            const sentAnalysisEl = document.getElementById('sentenceAnalysis');
+            const sentList = document.getElementById('sentList');
+            if (sents.length) {
+                sentAnalysisEl.style.display = 'block';
+                sentList.innerHTML = sents.map(s => {
+                    const lc = levelConfig[s.level] || levelConfig.safe;
+                    const spct = (s.score * 100).toFixed(0) + '%';
+                    return '<div class="sent-item ' + (s.level || 'safe') + '">' +
+                        '<span style="flex:1;word-break:break-word;">' + s.sentence + '</span>' +
+                        '<span class="sent-score ' + (s.level || 'safe') + '">' + spct + '</span></div>';
+                }).join('');
+            }
+
+            // Highlighted text
+            const analysisBox = document.getElementById('analysisBox');
+            const analysisText = document.getElementById('analysisText');
+            if (data.highlighted_html) {
+                analysisBox.style.display = 'block';
+                analysisText.innerHTML = data.highlighted_html;
+            }
+        }
+
+        function toggleExportMenu() {
+            const dropdown = document.getElementById('exportDropdown');
+            const chevron = document.getElementById('exportChevron');
+            const isOpen = dropdown.classList.toggle('open');
+            chevron.style.transform = isOpen ? 'rotate(180deg)' : '';
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('exportMenu');
+            const dropdown = document.getElementById('exportDropdown');
+            if (menu && !menu.contains(e.target)) {
+                dropdown.classList.remove('open');
+                document.getElementById('exportChevron').style.transform = '';
+            }
+        });
+
+        function exportAs(format) {
+            document.getElementById('exportDropdown').classList.remove('open');
+            document.getElementById('exportChevron').style.transform = '';
+            showToast('Preparing ' + format.toUpperCase() + ' report...', 'success');
+
+            const text = document.getElementById('mainText').value.trim();
+            const score = document.getElementById('gaugeValue').textContent;
+            const level = document.getElementById('levelText').textContent;
+            const explanation = document.getElementById('explanationText').textContent;
+            const metaRow = document.querySelector('.result-meta-row');
+            const sentenceList = document.getElementById('sentList');
+
+            // Build a structured payload from the DOM
+            const payload = {
+                text: text,
+                similarity: parseFloat(score) / 100,
+                level: level.toLowerCase(),
+                word_count: parseInt(document.getElementById('wordCountDisplay').textContent) || 0,
+                char_count: parseInt(document.getElementById('charCount').textContent) || 0,
+                explanation: explanation,
+                metrics: window._lastMetrics || {},
+                sentence_analysis: window._lastSentenceAnalysis || []
+            };
+
+            const endpoint = '/api/export/' + format;
+            fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(function(response) {
+                if (!response.ok) throw new Error('Export failed');
+                return response.blob();
+            })
+            .then(function(blob) {
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                var contentDisp = blob.type || '';
+                var match = contentDisp.match(/filename=(.+)/);
+                a.download = 'vericheck-report.' + format;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast(format.toUpperCase() + ' report downloaded!', 'success');
+            })
+            .catch(function(err) {
+                showToast('Export failed: ' + err.message, 'error');
+            });
+        }
+
+        function exportReport() { exportAs('txt'); } // backward compat
+
+        function copyReportLink() {
+            const score = document.getElementById('gaugeValue').textContent;
+            const text = 'VeriCheck Report: ' + score + ' plagiarism detected. Check your text at VeriCheck!';
+            navigator.clipboard?.writeText(text).then(() => showToast('Copied to clipboard!', 'success'))
+                .catch(() => showToast('Copy failed', 'error'));
+        }
+
+        function displayCheckerResult(data) {
+            document.getElementById('checkerLoading').classList.remove('show');
+            document.getElementById('checkerResultBox').classList.add('show');
+            const score = parseFloat(data.similarity || 0);
+            const pct = (score * 100).toFixed(0);
+            const level = data.level || 'safe';
+
+            const levelConfig = {
+                safe:    { icon: 'fa-check-circle',        color: '#10b981', text: 'Original Content' },
+                low:     { icon: 'fa-check-circle',        color: '#10b981', text: 'Low Similarity' },
+                medium:  { icon: 'fa-exclamation-circle',   color: '#f59e0b', text: 'Moderate Similarity' },
+                high:    { icon: 'fa-exclamation-triangle', color: '#ef4444', text: 'High Similarity' },
+                critical:{ icon: 'fa-times-circle',        color: '#dc2626', text: 'Critical Similarity' }
+            };
+            const cfg = levelConfig[level] || levelConfig.safe;
+            const scoreEl = document.getElementById('checkerScoreValue');
+            scoreEl.textContent = pct + '%';
+            scoreEl.style.color = cfg.color;
+            scoreEl.style.fontSize = '2.5rem';
+            scoreEl.style.fontWeight = '800';
+            const statusEl = document.getElementById('checkerScoreStatus');
+            statusEl.innerHTML = '<i class="fas ' + cfg.icon + '" style="color:' + cfg.color + ';"></i> ' + cfg.text;
+            statusEl.className = 'score-status ' + level;
+            document.getElementById('checkerMetaWords').textContent = (data.word_count || 0).toLocaleString();
+            document.getElementById('checkerMetaChars').textContent = (data.char_count || 0).toLocaleString();
+            document.getElementById('checkerMetaDate').textContent = new Date().toLocaleDateString();
+            document.getElementById('checkerAnalysisText').innerHTML = data.highlighted_html || '';
+
+            // Also show explanation if available
+            if (data.explanation) {
+                const existingNote = document.getElementById('checkerExplanationNote');
+                if (!existingNote) {
+                    const note = document.createElement('p');
+                    note.id = 'checkerExplanationNote';
+                    note.style.cssText = 'margin-top:1rem;padding:0.75rem 1rem;background:rgba(99,102,241,0.06);border:1px solid var(--border);border-radius:8px;font-size:0.85rem;color:var(--text-muted);';
+                    note.textContent = 'ℹ ' + data.explanation;
+                    document.getElementById('checkerAnalysisText').after(note);
+                }
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const errorDiv = document.getElementById('regError');
+            try {
+                const res = await fetch(API_URL + '/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    state.token = data.token;
+                    state.user = data.user;
+                    localStorage.setItem('vericheck_token', data.token);
+                    localStorage.setItem('vericheck_user', JSON.stringify(data.user));
+                    closeModal('register');
+                    showToast('Account created!', 'success');
+                    updateNav();
+                } else {
+                    errorDiv.textContent = data.error || 'Registration failed';
+                    errorDiv.classList.add('show');
+                }
+            } catch (e) {
+                errorDiv.textContent = 'Cannot connect to server';
+                errorDiv.classList.add('show');
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            try {
+                const res = await fetch(API_URL + '/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    state.token = data.token;
+                    state.user = data.user;
+                    localStorage.setItem('vericheck_token', data.token);
+                    localStorage.setItem('vericheck_user', JSON.stringify(data.user));
+                    closeModal('login');
+                    showToast('Welcome back!', 'success');
+                    updateNav();
+                    showPage('dashboard');
+                } else {
+                    errorDiv.textContent = data.error || 'Login failed';
+                    errorDiv.classList.add('show');
+                }
+            } catch (e) {
+                errorDiv.textContent = 'Cannot connect to server';
+                errorDiv.classList.add('show');
+            }
+        }
+
+        function logout() {
+            state.token = null;
+            state.user = null;
+            localStorage.removeItem('vericheck_token');
+            localStorage.removeItem('vericheck_user');
+            updateNav();
+            showPage('home');
+            showToast('Logged out', 'success');
+        }
+
+        async function loadDashboard() {
+            if (!state.token) { showModal('login'); return; }
+            document.getElementById('userName').textContent = state.user?.username || 'User';
+            document.getElementById('userAvatar').textContent = (state.user?.username || 'U')[0].toUpperCase();
+            document.getElementById('userEmail').textContent = state.user?.email || '';
+            try {
+                const res = await fetch(API_URL + '/dashboard', { headers: { 'Authorization': 'Bearer ' + state.token } });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('dashTotal').textContent = data.total_scans;
+                    document.getElementById('dashAvg').textContent = (data.average_similarity * 100).toFixed(1) + '%';
+                    document.getElementById('dashHigh').textContent = data.high_risk_count;
+                    document.getElementById('dashWords').textContent = (data.total_words_checked || 0).toLocaleString();
+                    const tbody = document.getElementById('historyBody');
+                    if (data.recent_scans?.length) {
+                        tbody.innerHTML = data.recent_scans.map(s => `
+                            <tr>
+                                <td>${new Date(s.created_at).toLocaleDateString()}</td>
+                                <td>${s.input_type || 'text'}</td>
+                                <td>${(s.word_count || 0).toLocaleString()}</td>
+                                <td><span class="badge ${s.similarity > 0.7 ? 'badge-high' : s.similarity > 0.4 ? 'badge-medium' : 'badge-low'}">${(s.similarity * 100).toFixed(0)}%</span></td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+            } catch (e) { showToast('Failed to load dashboard', 'error'); }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        async function loadAdminDashboard() {
+            if (!state.token || !state.user?.is_admin) {
+                showToast('Access denied', 'error');
+                showPage('home');
+                return;
+            }
+            document.getElementById('adminAvatar').textContent = (state.user?.username || 'A')[0].toUpperCase();
+            document.getElementById('adminName').textContent = state.user?.username + ' (Admin)';
+            loadAdminStats();
+            loadAdminUsers();
+            loadAdminScans();
+            loadAdminLogs();
+        }
+
+        async function loadAdminStats() {
+            try {
+                const res = await fetch(API_URL + '/admin/stats', {
+                    headers: { 'Authorization': 'Bearer ' + state.token }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('adminTotalUsers').textContent = data.total_users || 0;
+                    document.getElementById('adminTotalScans').textContent = data.total_scans || 0;
+                    document.getElementById('adminAvgSim').textContent = data.avg_similarity ? (data.avg_similarity * 100).toFixed(1) + '%' : '0%';
+                    document.getElementById('adminTotalWords').textContent = (data.total_words || 0).toLocaleString();
+                }
+            } catch (e) { console.error('Admin stats error:', e); }
+        }
+
+        async function loadAdminUsers() {
+            try {
+                const res = await fetch(API_URL + '/admin/users', {
+                    headers: { 'Authorization': 'Bearer ' + state.token }
+                });
+                const data = await res.json();
+                if (res.ok && Array.isArray(data)) {
+                    const tbody = document.getElementById('adminUsersBody');
+                    if (!data.length) {
+                        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">No users found.</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = data.map(u => `
+                        <tr>
+                            <td style="color:var(--text-muted);font-size:0.8rem;">#${u.id}</td>
+                            <td><strong>${u.username}</strong></td>
+                            <td style="color:var(--text-muted);">${u.email}</td>
+                            <td><span class="role-badge ${u.is_admin ? 'role-admin' : 'role-user'}">${u.is_admin ? 'Admin' : 'User'}</span></td>
+                            <td style="color:var(--text-muted);font-size:0.85rem;">${new Date(u.created_at).toLocaleDateString()}</td>
+                            <td style="color:var(--text-muted);">${u.scan_count || 0}</td>
+                            <td>
+                                ${u.is_admin ? '' : `<button class="action-btn delete" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i> Delete</button>`}
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (e) { console.error('Admin users error:', e); }
+        }
+
+        async function loadAdminScans() {
+            try {
+                const res = await fetch(API_URL + '/admin/scans', {
+                    headers: { 'Authorization': 'Bearer ' + state.token }
+                });
+                const data = await res.json();
+                if (res.ok && Array.isArray(data)) {
+                    const tbody = document.getElementById('adminScansBody');
+                    if (!data.length) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem;">No scans found.</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = data.map(s => `
+                        <tr>
+                            <td style="color:var(--text-muted);font-size:0.8rem;">#${s.id}</td>
+                            <td>${s.username || 'Unknown'}</td>
+                            <td><span style="padding:0.2rem 0.5rem;background:rgba(99,102,241,0.1);border-radius:4px;font-size:0.8rem;">${s.input_type}</span></td>
+                            <td>${(s.word_count_a || 0).toLocaleString()}</td>
+                            <td><span style="color:${s.similarity > 0.5 ? 'var(--error)' : 'var(--success)'};font-weight:600;">${(s.similarity * 100).toFixed(1)}%</span></td>
+                            <td style="color:var(--text-muted);font-size:0.85rem;">${new Date(s.created_at).toLocaleDateString()}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (e) { console.error('Admin scans error:', e); }
+        }
+
+        async function loadAdminLogs() {
+            try {
+                const res = await fetch(API_URL + '/admin/logs', {
+                    headers: { 'Authorization': 'Bearer ' + state.token }
+                });
+                const data = await res.json();
+                if (res.ok && Array.isArray(data)) {
+                    const tbody = document.getElementById('adminLogsBody');
+                    if (!data.length) {
+                        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">No logs found.</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = data.map(l => `
+                        <tr>
+                            <td style="color:var(--text-muted);font-size:0.8rem;">#${l.id}</td>
+                            <td>${l.username || 'System'}</td>
+                            <td><strong>${l.action}</strong></td>
+                            <td style="color:var(--text-muted);font-size:0.85rem;">${l.input_type || '-'}</td>
+                            <td style="color:var(--text-muted);font-size:0.85rem;">${l.ip_address || '-'}</td>
+                            <td style="font-size:0.85rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${l.result || ''}">${l.result || '-'}</td>
+                            <td style="color:var(--text-muted);font-size:0.8rem;">${new Date(l.created_at).toLocaleString()}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (e) { console.error('Admin logs error:', e); }
+        }
+
+        function showAdminTab(tab) {
+            document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('admin' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Tab').classList.remove('hidden');
+            event.target.classList.add('active');
+        }
+
+        function showCreateUser() {
+            document.getElementById('createUserModal').classList.add('show');
+        }
+
+        async function handleCreateUser(e) {
+            e.preventDefault();
+            const username = document.getElementById('cuUsername').value.trim();
+            const email = document.getElementById('cuEmail').value.trim();
+            const password = document.getElementById('cuPassword').value;
+            const is_admin = document.getElementById('cuAdmin').checked;
+            try {
+                const res = await fetch(API_URL + '/admin/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + state.token },
+                    body: JSON.stringify({ username, email, password, is_admin })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    closeModal('createUser');
+                    showToast('User created successfully', 'success');
+                    loadAdminUsers();
+                    loadAdminStats();
+                } else {
+                    document.getElementById('createUserError').textContent = data.error || 'Failed to create user';
+                    document.getElementById('createUserError').style.display = 'block';
+                }
+            } catch (e) { showToast('Error creating user', 'error'); }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('Are you sure you want to delete this user? This cannot be undone.')) return;
+            try {
+                const res = await fetch(API_URL + '/admin/users/' + userId, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + state.token }
+                });
+                if (res.ok) {
+                    showToast('User deleted', 'success');
+                    loadAdminUsers();
+                    loadAdminStats();
+                } else {
+                    const data = await res.json();
+                    showToast(data.error || 'Failed to delete user', 'error');
+                }
+            } catch (e) { showToast('Error deleting user', 'error'); }
+        }
+    </script>
+</body>
+</html>
